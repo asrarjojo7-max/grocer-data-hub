@@ -27,9 +27,11 @@ export function DesignerDashboard() {
     const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
       .toISOString()
       .slice(0, 10);
+    // Use created_at so newly added receipts always appear in current month
+    // stats even if the receipt_date written on the paper is older.
     const calc = (from: string) =>
       receipts
-        .filter((r) => r.receipt_date >= from)
+        .filter((r) => (r.created_at || r.receipt_date).slice(0, 10) >= from)
         .reduce(
           (a, r) => ({
             count: a.count + 1,
