@@ -99,7 +99,8 @@ export function useSetupGreenApiWebhook() {
           webhookUrlToken: "",
           incomingWebhook: "yes",
           outgoingWebhook: "no",
-          outgoingMessageWebhook: "no",
+          outgoingMessageWebhook: "yes",
+          outgoingAPIMessageWebhook: "yes",
           stateWebhook: "no",
           deviceWebhook: "no",
         }),
@@ -133,6 +134,7 @@ export function useDiagnoseGreenApi() {
       if (state?.stateInstance !== "authorized") issues.push("الـ Instance غير مفعّل — امسح QR من Green API");
       if (settings?.webhookUrl !== expectedUrl) issues.push(`Webhook URL غير مطابق. الحالي: ${settings?.webhookUrl || "(فارغ)"}`);
       if (settings?.incomingWebhook !== "yes") issues.push("incomingWebhook معطّل");
+      if (settings?.outgoingMessageWebhook !== "yes") issues.push("outgoingMessageWebhook معطّل (لن يستقبل رسائلك أنت)");
 
       if (issues.length === 0) toast.success("كل شيء سليم ✅ Green API يرسل للنظام");
       else toast.error(issues.join(" • "), { duration: 9000 });
