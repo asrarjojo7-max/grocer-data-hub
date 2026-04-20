@@ -3,9 +3,10 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useReceipts, useUserProfile } from "@/hooks/useReceipts";
+import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
 import { format } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ReceiptDetailDialog } from "@/components/receipts/ReceiptDetailDialog";
 import {
   Plus,
   Wallet,
@@ -21,6 +22,7 @@ import {
 export function DesignerDashboard() {
   const { data: profile } = useUserProfile();
   const { data: receipts = [] } = useReceipts(true);
+  const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -179,7 +181,12 @@ export function DesignerDashboard() {
       ) : (
         <div className="space-y-2">
           {recent.map((r) => (
-            <Card key={r.id} className="border-0 shadow-soft active:scale-[0.99] transition-transform">
+            <Card
+              key={r.id}
+              role="button"
+              onClick={() => setSelected(r)}
+              className="border-0 shadow-soft active:scale-[0.99] transition-transform cursor-pointer"
+            >
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   {r.source === "whatsapp" ? (
@@ -217,6 +224,12 @@ export function DesignerDashboard() {
           ))}
         </div>
       )}
+
+      <ReceiptDetailDialog
+        receipt={selected}
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+      />
     </DashboardLayout>
   );
 }

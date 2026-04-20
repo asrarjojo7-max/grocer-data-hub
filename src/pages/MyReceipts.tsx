@@ -1,21 +1,23 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useReceipts, useUserProfile } from "@/hooks/useReceipts";
-import { Plus, Loader2, Ruler, Wallet, Receipt, MessageCircle, Upload } from "lucide-react";
+import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
+import { Plus, Loader2, Ruler, Wallet, Receipt, MessageCircle, Upload, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ReceiptDetailDialog } from "@/components/receipts/ReceiptDetailDialog";
 
 export default function MyReceipts() {
   const { data: receipts = [], isLoading } = useReceipts(true);
   const { data: profile } = useUserProfile();
   const qc = useQueryClient();
+  const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   useEffect(() => {
     let userId: string | null = null;
@@ -106,7 +108,12 @@ export default function MyReceipts() {
           {/* Mobile: card list */}
           <div className="lg:hidden space-y-2.5">
             {receipts.map((r) => (
-              <Card key={r.id} className="overflow-hidden active:scale-[0.99] transition-transform">
+              <Card
+                key={r.id}
+                role="button"
+                onClick={() => setSelected(r)}
+                className="overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0 flex-1">
@@ -140,7 +147,15 @@ export default function MyReceipts() {
                       <div className="text-[10px] text-muted-foreground">{Number(r.commission_per_meter)} ج.س × {Number(r.total_meters)} م</div>
                     </div>
                   </div>
-                  <div className="mt-2 flex justify-end">
+                  <div className="mt-2 flex items-center justify-between">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs gap-1 text-primary"
+                      onClick={(e) => { e.stopPropagation(); setSelected(r); }}
+                    >
+                      <Eye className="w-3.5 h-3.5" /> عرض الإيصال الأصلي
+                    </Button>
                     <Badge variant={r.is_confirmed ? "default" : "secondary"} className="text-[10px]">{r.is_confirmed ? "مؤكد" : "مسودة"}</Badge>
                   </div>
                 </CardContent>
@@ -167,7 +182,11 @@ export default function MyReceipts() {
                 </TableHeader>
                 <TableBody>
                   {receipts.map((r) => (
-                    <TableRow key={r.id}>
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer hover:bg-muted/40"
+                      onClick={() => setSelected(r)}
+                    >
                       <TableCell>{format(new Date(r.receipt_date), "yyyy-MM-dd")}</TableCell>
                       <TableCell>{r.customer_name || "-"}</TableCell>
                       <TableCell>{Number(r.total_meters)} م</TableCell>
@@ -191,6 +210,12 @@ export default function MyReceipts() {
           </Card>
         </>
       )}
+
+      <ReceiptDetailDialog
+        receipt={selected}
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+      />
     </DashboardLayout>
   );
 }
