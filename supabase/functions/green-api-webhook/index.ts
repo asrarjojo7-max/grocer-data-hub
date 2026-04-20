@@ -146,46 +146,57 @@ serve(async (req) => {
       if (messageType === "imageMessage") {
         console.log(`[designer-link] processing image from chat=${chatId}`);
         const downloadUrl = messageData.fileMessageData?.downloadUrl;
-        if (downloadUrl) {
+        if (!downloadUrl) {
+          console.warn("[designer-link] no downloadUrl on imageMessage");
+        } else {
           const imageBase64 = await downloadGreenApiMedia(downloadUrl);
-          if (imageBase64) {
-            const publicUrl = await uploadToStorage(supabase, imageBase64, designerLink.user_id);
+          if (!imageBase64) {
+            console.warn("[designer-link] failed to download media");
+          } else {
             const extracted = await extractPrintReceipt(imageBase64);
+            console.log("[designer-link] extracted:", JSON.stringify(extracted));
 
-            // Get designer profile for commission rate
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("commission_percentage, full_name")
-              .eq("id", designerLink.user_id)
-              .maybeSingle();
+            if (extracted && extracted.is_receipt === false) {
+              console.log("[designer-link] image is NOT a receipt, ignoring");
+            } else {
+              const publicUrl = await uploadToStorage(supabase, imageBase64, designerLink.user_id);
 
-            const pricePerMeter = 300; // designers default; admin may override later
-            const meters = Number(extracted?.total_meters ?? 0);
-            const totalAmount = meters * pricePerMeter;
-            const commissionPerMeter = Number(profile?.commission_percentage ?? 0);
-            const commissionAmount = meters * commissionPerMeter;
-            const netAmount = totalAmount - commissionAmount;
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("commission_percentage, full_name")
+                .eq("id", designerLink.user_id)
+                .maybeSingle();
 
-            await supabase.from("print_receipts").insert({
-              user_id: designerLink.user_id,
-              branch_id: null,
-              customer_name: extracted?.customer_name ?? null,
-              receipt_date: extracted?.receipt_date ?? new Date().toISOString().split("T")[0],
-              total_meters: meters,
-              price_per_meter: pricePerMeter,
-              total_amount: totalAmount,
-              commission_percentage: commissionPerMeter,
-              commission_amount: commissionAmount,
-              net_amount: netAmount,
-              image_url: publicUrl,
-              extracted_data: extracted,
-              ai_confidence: extracted?.ai_confidence ?? null,
-              ai_notes: extracted?.ai_notes ?? null,
-              is_confirmed: false,
-              source: "whatsapp",
-              whatsapp_from_number: fromNumber,
-              notes: `وارد من واتساب (${senderName || "غير معروف"}) — مجموعة: ${designerLink.monitored_chat_name || "كل المحادثات"}`,
-            });
+              const pricePerMeter = 300;
+              const meters = Number(extracted?.total_meters ?? 0);
+              const totalAmount = meters * pricePerMeter;
+              const commissionPerMeter = Number(profile?.commission_percentage ?? 0);
+              const commissionAmount = meters * commissionPerMeter;
+              const netAmount = totalAmount - commissionAmount;
+
+              const { error: insErr } = await supabase.from("print_receipts").insert({
+                user_id: designerLink.user_id,
+                branch_id: null,
+                customer_name: extracted?.customer_name ?? null,
+                receipt_date: extracted?.receipt_date ?? new Date().toISOString().split("T")[0],
+                total_meters: meters,
+                price_per_meter: pricePerMeter,
+                total_amount: totalAmount,
+                commission_percentage: commissionPerMeter,
+                commission_amount: commissionAmount,
+                net_amount: netAmount,
+                image_url: publicUrl,
+                extracted_data: extracted,
+                ai_confidence: extracted?.ai_confidence ?? null,
+                ai_notes: extracted?.ai_notes ?? null,
+                is_confirmed: false,
+                source: "whatsapp",
+                whatsapp_from_number: fromNumber,
+                notes: `وارد من واتساب (${senderName || "غير معروف"}) — مجموعة: ${designerLink.monitored_chat_name || "كل المحادثات"}`,
+              });
+              if (insErr) console.error("[designer-link] insert error:", insErr);
+              else console.log("[designer-link] receipt saved successfully");
+            }
           }
         }
       }

@@ -27,6 +27,7 @@ import {
   useSetupGreenApiWebhook,
   useSaveWhatsAppLink,
   useDeleteWhatsAppLink,
+  useDiagnoseGreenApi,
 } from "@/hooks/useDesignerWhatsApp";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -38,6 +39,7 @@ export default function MyWhatsApp() {
   const setupWebhook = useSetupGreenApiWebhook();
   const save = useSaveWhatsAppLink();
   const remove = useDeleteWhatsAppLink();
+  const diagnose = useDiagnoseGreenApi();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [phone, setPhone] = useState("");
@@ -107,6 +109,34 @@ export default function MyWhatsApp() {
             أرسل صور إيصالاتك في المجموعة <strong>{link.monitored_chat_name}</strong> وستظهر تلقائياً في حسابك مع حساب نسبتك.
           </AlertDescription>
         </Alert>
+
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 rounded-xl gap-2"
+            disabled={diagnose.isPending}
+            onClick={() => diagnose.mutate({ instanceId: link.green_api_instance_id, apiToken: link.green_api_token })}
+          >
+            {diagnose.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            تشخيص الاتصال
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 rounded-xl gap-2"
+            disabled={setupWebhook.isPending}
+            onClick={async () => {
+              try {
+                await setupWebhook.mutateAsync({ instanceId: link.green_api_instance_id, apiToken: link.green_api_token });
+                (await import("sonner")).toast.success("تم إعادة إعداد Webhook");
+              } catch { /* toast shown */ }
+            }}
+          >
+            {setupWebhook.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            إعادة إعداد Webhook
+          </Button>
+        </div>
 
         <div className="grid grid-cols-2 gap-2">
           <Button

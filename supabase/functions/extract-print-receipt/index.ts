@@ -59,15 +59,21 @@ Deno.serve(async (req) => {
 - إذا لم يوجد سنة، افترض السنة الحالية.
 - إذا غير موجود نهائياً، ضع null.
 
+== التحقق إذا كانت الصورة إيصال طباعة ==
+قبل أي تحليل، حدد إذا كانت الصورة فعلاً إيصال طباعة (ورقة بها أمتار/مقاسات/أسعار/اسم عميل بخط اليد أو مطبوعة).
+- إذا كانت صورة شخصية، منظر، طعام، رسالة نصية، شعار، إعلان، أو أي شيء ليس إيصالاً → ضع is_receipt=false وأرجع باقي الحقول null.
+- إذا كانت إيصالاً ولكن غير مقروء بتاتاً (ضبابي شديد، مقطوع، مظلم) → is_receipt=true لكن total_meters=null واشرح في ai_notes.
+
 == تعليمات الإخراج ==
 أرجع JSON فقط (لا markdown، لا شرح خارجي) بهذا الشكل بالضبط:
 {
+  "is_receipt": true | false,
   "customer_name": "اسم العميل أو null",
   "receipt_date": "YYYY-MM-DD أو null",
   "total_meters": رقم أو null,
   "meters_source": "manual_total" | "line_items" | "calculated_from_dimensions" | "unknown",
   "ai_confidence": 0-100,
-  "ai_notes": "اشرح بالعربية: من أين أخذت الأمتار، أي أرقام كانت غامضة وكيف فسرتها، أي تحفظات للمحاسب"
+  "ai_notes": "اشرح بالعربية: إذا ليست إيصالاً اذكر ما تراه. إذا إيصال، اشرح من أين أخذت الأمتار وأي أرقام غامضة"
 }`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
