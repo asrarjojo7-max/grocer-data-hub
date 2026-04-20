@@ -101,7 +101,9 @@ serve(async (req) => {
     const body = await req.json();
     console.log("[green-api-webhook] received:", body.typeWebhook, "instance=", body.instanceData?.idInstance, "chat=", body.senderData?.chatId, "type=", body.messageData?.typeMessage);
 
-    if (body.typeWebhook !== "incomingMessageReceived") {
+    // Accept incoming AND outgoing (so a designer's own messages in a group are processed too)
+    const allowedTypes = ["incomingMessageReceived", "outgoingMessageReceived", "outgoingAPIMessageReceived"];
+    if (!allowedTypes.includes(body.typeWebhook)) {
       return new Response(JSON.stringify({ status: "ignored", reason: body.typeWebhook }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
