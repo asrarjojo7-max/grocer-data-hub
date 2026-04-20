@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useRouterState } from "@tanstack/react-router";
+import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Branches from "./pages/Branches";
@@ -18,13 +19,26 @@ import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
+const isBrowser = typeof window !== "undefined";
+
+function AppRouter({ children }: { children: React.ReactNode }) {
+  const currentPath = useRouterState({
+    select: (state) => `${state.location.pathname}${state.location.search}${state.location.hash}`,
+  });
+
+  if (isBrowser) {
+    return <BrowserRouter>{children}</BrowserRouter>;
+  }
+
+  return <MemoryRouter initialEntries={[currentPath]}>{children}</MemoryRouter>;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <AppRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -39,7 +53,7 @@ const App = () => (
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+      </AppRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
