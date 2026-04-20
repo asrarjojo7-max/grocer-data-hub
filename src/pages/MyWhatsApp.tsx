@@ -39,6 +39,7 @@ export default function MyWhatsApp() {
   const setupWebhook = useSetupGreenApiWebhook();
   const save = useSaveWhatsAppLink();
   const remove = useDeleteWhatsAppLink();
+  const diagnose = useDiagnoseGreenApi();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [phone, setPhone] = useState("");
