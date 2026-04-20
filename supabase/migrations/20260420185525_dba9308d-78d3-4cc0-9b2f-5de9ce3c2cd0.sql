@@ -1,0 +1,2 @@
+UPDATE profiles SET commission_percentage = 300 WHERE id = '429ce0e9-f7de-482b-ac05-c0a99623b53e';
+UPDATE print_receipts SET commission_percentage = 300, commission_amount = total_meters * 300, net_amount = total_amount - (total_meters * 300) WHERE id = '69aaf1a4-c95a-4268-8938-ee536d663c60';
