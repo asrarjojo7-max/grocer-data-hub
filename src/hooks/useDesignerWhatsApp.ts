@@ -115,6 +115,34 @@ export function useSetupGreenApiWebhook() {
   });
 }
 
+export function useDiagnoseGreenApi() {
+  return useMutation({
+    mutationFn: async ({ instanceId, apiToken }: { instanceId: string; apiToken: string }) => {
+      const id = instanceId.trim();
+      const tk = apiToken.trim();
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const expectedUrl = `https://${projectId}.supabase.co/functions/v1/green-api-webhook`;
+
+      const stateRes = await fetch(`https://api.green-api.com/waInstance${id}/getStateInstance/${tk}`);
+      const state = stateRes.ok ? await stateRes.json() : null;
+
+      const settingsRes = await fetch(`https://api.green-api.com/waInstance${id}/getSettings/${tk}`);
+      const settings = settingsRes.ok ? await settingsRes.json() : null;
+
+      const issues: string[] = [];
+      if (state?.stateInstance !== "authorized") issues.push("الـ Instance غير مفعّل — امسح QR من Green API");
+      if (settings?.webhookUrl !== expectedUrl) issues.push(`Webhook URL غير مطابق. الحالي: ${settings?.webhookUrl || "(فارغ)"}`);
+      if (settings?.incomingWebhook !== "yes") issues.push("incomingWebhook معطّل");
+
+      if (issues.length === 0) toast.success("كل شيء سليم ✅ Green API يرسل للنظام");
+      else toast.error(issues.join(" • "), { duration: 9000 });
+
+      return { state, settings, expectedUrl, issues };
+    },
+    onError: (e: Error) => toast.error(e.message || "فشل التشخيص"),
+  });
+}
+
 export function useSaveWhatsAppLink() {
   const qc = useQueryClient();
   return useMutation({
