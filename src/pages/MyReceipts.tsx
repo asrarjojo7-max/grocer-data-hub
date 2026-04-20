@@ -68,7 +68,7 @@ export default function MyReceipts() {
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">إيصالاتي</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            مرحباً {profile?.full_name || ""} — سعر النسبة: <strong>{profile?.commission_percentage || 0} ج.س / متر</strong>
+            مرحباً {profile?.full_name || ""} — سعر النسبة: <strong>{profile?.commission_per_meter || 0} ج.س / متر</strong>
           </p>
         </div>
         <Button asChild size="lg" className="w-full sm:w-auto h-12 sm:h-10 rounded-xl shadow-md">
@@ -137,7 +137,7 @@ export default function MyReceipts() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-primary leading-tight">{Number(r.commission_amount).toLocaleString()} <span className="text-xs">ج.س</span></div>
-                      <div className="text-[10px] text-muted-foreground">{Number(r.commission_percentage)} ج.س × {Number(r.total_meters)} م</div>
+                      <div className="text-[10px] text-muted-foreground">{Number(r.commission_per_meter)} ج.س × {Number(r.total_meters)} م</div>
                     </div>
                   </div>
                   <div className="mt-2 flex justify-end">
@@ -173,7 +173,7 @@ export default function MyReceipts() {
                       <TableCell>{Number(r.total_meters)} م</TableCell>
                       <TableCell>{Number(r.price_per_meter).toLocaleString()}</TableCell>
                       <TableCell>{Number(r.total_amount).toLocaleString()}</TableCell>
-                      <TableCell className="text-muted-foreground">{Number(r.commission_percentage).toLocaleString()} ج.س</TableCell>
+                      <TableCell className="text-muted-foreground">{Number(r.commission_per_meter).toLocaleString()} ج.س</TableCell>
                       <TableCell className="text-primary font-semibold">{Number(r.commission_amount).toLocaleString()}</TableCell>
                       <TableCell>
                         {r.source === "whatsapp" ? (

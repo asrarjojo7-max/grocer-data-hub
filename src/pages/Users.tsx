@@ -22,7 +22,7 @@ type Profile = {
   id: string;
   full_name: string | null;
   phone: string | null;
-  commission_percentage: number;
+  commission_per_meter: number;
   created_at: string;
 };
 
@@ -37,7 +37,7 @@ export default function Users() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, full_name, phone, commission_percentage, created_at")
+        .select("id, full_name, phone, commission_per_meter, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Profile[];
@@ -153,7 +153,7 @@ export default function Users() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Percent className="w-4 h-4" />
-                    <span>سعر النسبة: {profile.commission_percentage} ج.س / متر</span>
+                    <span>سعر النسبة: {profile.commission_per_meter} ج.س / متر</span>
                   </div>
                   <Button
                     variant={isAdmin ? "destructive" : "outline"}

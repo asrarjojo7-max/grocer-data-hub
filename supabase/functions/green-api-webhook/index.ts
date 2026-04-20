@@ -44,21 +44,21 @@ async function uploadToStorage(supabase: any, base64DataUrl: string, branchId: s
   }
 }
 
-async function matchDesignerByPhone(supabase: any, fromNumber: string): Promise<{ id: string; full_name: string | null; commission_percentage: number } | null> {
+async function matchDesignerByPhone(supabase: any, fromNumber: string): Promise<{ id: string; full_name: string | null; commission_per_meter: number } | null> {
   try {
     const digits = (fromNumber || "").replace(/\D/g, "");
     if (digits.length < 9) return null;
     const suffix = digits.slice(-9);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, phone, commission_percentage")
+      .select("id, full_name, phone, commission_per_meter")
       .not("phone", "is", null);
     if (error || !data) return null;
     const match = data.find((p: any) => {
       const pd = (p.phone || "").replace(/\D/g, "");
       return pd.length >= 9 && pd.slice(-9) === suffix;
     });
-    return match ? { id: match.id, full_name: match.full_name, commission_percentage: Number(match.commission_percentage ?? 10) } : null;
+    return match ? { id: match.id, full_name: match.full_name, commission_per_meter: Number(match.commission_per_meter ?? 10) } : null;
   } catch (e) {
     console.error("matchDesignerByPhone error:", e);
     return null;
@@ -165,14 +165,14 @@ serve(async (req) => {
 
               const { data: profile } = await supabase
                 .from("profiles")
-                .select("commission_percentage, full_name")
+                .select("commission_per_meter, full_name")
                 .eq("id", designerLink.user_id)
                 .maybeSingle();
 
               const pricePerMeter = 300;
               const meters = Number(extracted?.total_meters ?? 0);
               const totalAmount = meters * pricePerMeter;
-              const commissionPerMeter = Number(profile?.commission_percentage ?? 0);
+              const commissionPerMeter = Number(profile?.commission_per_meter ?? 0);
               const commissionAmount = meters * commissionPerMeter;
               const netAmount = totalAmount - commissionAmount;
 
@@ -184,7 +184,7 @@ serve(async (req) => {
                 total_meters: meters,
                 price_per_meter: pricePerMeter,
                 total_amount: totalAmount,
-                commission_percentage: commissionPerMeter,
+                commission_per_meter: commissionPerMeter,
                 commission_amount: commissionAmount,
                 net_amount: netAmount,
                 image_url: publicUrl,
@@ -253,7 +253,7 @@ serve(async (req) => {
           const pricePerMeter = Number(connection.branches?.default_price_per_meter ?? 300);
           const meters = Number(extracted?.total_meters ?? 0);
           const totalAmount = meters * pricePerMeter;
-          const commissionPerMeter = Number(designer?.commission_percentage ?? 0);
+          const commissionPerMeter = Number(designer?.commission_per_meter ?? 0);
           const commissionAmount = meters * commissionPerMeter;
           const netAmount = totalAmount - commissionAmount;
 
@@ -265,7 +265,7 @@ serve(async (req) => {
             total_meters: meters,
             price_per_meter: pricePerMeter,
             total_amount: totalAmount,
-            commission_percentage: commissionPerMeter,
+            commission_per_meter: commissionPerMeter,
             commission_amount: commissionAmount,
             net_amount: netAmount,
             image_url: publicUrl,
