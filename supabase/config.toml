@@ -1,0 +1,11 @@
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.extract-transfer-amount]
+verify_jwt = false
+
+[functions.green-api-webhook]
+verify_jwt = false
+
+[functions.extract-print-receipt]
+verify_jwt = false
