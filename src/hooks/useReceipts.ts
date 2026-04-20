@@ -27,6 +27,15 @@ export type PrintReceipt = {
   updated_at: string;
 };
 
+// Invalidate every query that depends on print_receipts so the dashboard,
+// recent list, top designers and reports all refresh after a mutation.
+function invalidateReceiptQueries(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["print_receipts"] });
+  qc.invalidateQueries({ queryKey: ["dashboard-stats-v2"] });
+  qc.invalidateQueries({ queryKey: ["top-designers"] });
+  qc.invalidateQueries({ queryKey: ["recent-receipts"] });
+}
+
 export function useReceipts(onlyMine = false) {
   return useQuery({
     queryKey: ["print_receipts", onlyMine],
@@ -103,7 +112,7 @@ export function useCreateReceipt() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["print_receipts"] });
+      invalidateReceiptQueries(qc);
       toast.success("تم حفظ الإيصال");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
@@ -118,7 +127,7 @@ export function useUpdateReceipt() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["print_receipts"] });
+      invalidateReceiptQueries(qc);
       toast.success("تم التحديث");
     },
   });
@@ -132,7 +141,7 @@ export function useDeleteReceipt() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["print_receipts"] });
+      invalidateReceiptQueries(qc);
       toast.success("تم الحذف");
     },
   });
