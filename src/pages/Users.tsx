@@ -153,7 +153,7 @@ export default function Users() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Percent className="w-4 h-4" />
-                    <span>سعر النسبة: {profile.commission_per_meter} ج.س / متر</span>
+                    <span>عمولة المتر: {profile.commission_per_meter} ج.س / متر</span>
                   </div>
                   <Button
                     variant={isAdmin ? "destructive" : "outline"}
