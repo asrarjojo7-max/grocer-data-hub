@@ -3,12 +3,14 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { MobileNav } from "./MobileNav";
 import { MobileHeader } from "./MobileHeader";
+import { useReceiptRealtimeToast } from "@/hooks/useReceiptRealtimeToast";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  useReceiptRealtimeToast();
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
