@@ -27,6 +27,7 @@ import {
   useSetupGreenApiWebhook,
   useSaveWhatsAppLink,
   useDeleteWhatsAppLink,
+  useDiagnoseGreenApi,
 } from "@/hooks/useDesignerWhatsApp";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
