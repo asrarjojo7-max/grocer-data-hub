@@ -210,6 +210,12 @@ export default function MyReceipts() {
           </Card>
         </>
       )}
+
+      <ReceiptDetailDialog
+        receipt={selected}
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+      />
     </DashboardLayout>
   );
 }
