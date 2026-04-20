@@ -22,15 +22,15 @@ const queryClient = new QueryClient();
 const isBrowser = typeof window !== "undefined";
 
 function AppRouter({ children }: { children: React.ReactNode }) {
-  const currentPath = useRouterState({
-    select: (state) => `${state.location.pathname}${state.location.search}${state.location.hash}`,
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
   });
 
   if (isBrowser) {
     return <BrowserRouter>{children}</BrowserRouter>;
   }
 
-  return <MemoryRouter initialEntries={[currentPath]}>{children}</MemoryRouter>;
+  return <MemoryRouter initialEntries={[pathname]}>{children}</MemoryRouter>;
 }
 
 const App = () => (
