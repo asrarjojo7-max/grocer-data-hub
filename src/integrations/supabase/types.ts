@@ -95,7 +95,7 @@ export type Database = {
           ai_notes: string | null
           branch_id: string | null
           commission_amount: number
-          commission_percentage: number
+          commission_per_meter: number
           confirmed_at: string | null
           created_at: string
           customer_name: string | null
@@ -119,7 +119,7 @@ export type Database = {
           ai_notes?: string | null
           branch_id?: string | null
           commission_amount?: number
-          commission_percentage?: number
+          commission_per_meter?: number
           confirmed_at?: string | null
           created_at?: string
           customer_name?: string | null
@@ -143,7 +143,7 @@ export type Database = {
           ai_notes?: string | null
           branch_id?: string | null
           commission_amount?: number
-          commission_percentage?: number
+          commission_per_meter?: number
           confirmed_at?: string | null
           created_at?: string
           customer_name?: string | null
@@ -174,7 +174,7 @@ export type Database = {
       }
       profiles: {
         Row: {
-          commission_percentage: number
+          commission_per_meter: number
           created_at: string
           full_name: string | null
           id: string
@@ -182,7 +182,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          commission_percentage?: number
+          commission_per_meter?: number
           created_at?: string
           full_name?: string | null
           id: string
@@ -190,7 +190,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          commission_percentage?: number
+          commission_per_meter?: number
           created_at?: string
           full_name?: string | null
           id?: string

@@ -11,7 +11,7 @@ export type PrintReceipt = {
   total_meters: number;
   price_per_meter: number;
   total_amount: number;
-  commission_percentage: number;
+  commission_per_meter: number;
   commission_amount: number;
   net_amount: number;
   image_url: string | null;

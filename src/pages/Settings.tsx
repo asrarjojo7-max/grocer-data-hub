@@ -38,14 +38,14 @@ export default function Settings() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, full_name, phone, commission_percentage")
+        .select("id, full_name, phone, commission_per_meter")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Array<{
         id: string;
         full_name: string | null;
         phone: string | null;
-        commission_percentage: number;
+        commission_per_meter: number;
       }>;
     },
   });
@@ -55,7 +55,7 @@ export default function Settings() {
 
   useEffect(() => {
     const initial: Record<string, number> = {};
-    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_percentage ?? 10)));
+    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_per_meter ?? 10)));
     setCommissions(initial);
   }, [designers]);
 
@@ -75,7 +75,7 @@ export default function Settings() {
     setSavingUserId(userId);
     const { error } = await (supabase as any)
       .from("profiles")
-      .update({ commission_percentage: commissions[userId] })
+      .update({ commission_per_meter: commissions[userId] })
       .eq("id", userId);
     setSavingUserId(null);
     if (error) return toast.error("فشل التحديث: " + error.message);

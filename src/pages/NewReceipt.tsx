@@ -66,7 +66,7 @@ export default function NewReceipt() {
       total_meters: Number(totalMeters),
       price_per_meter: Number(pricePerMeter),
       total_amount: totals.total,
-      commission_percentage: totals.rate,
+      commission_per_meter: totals.rate,
       commission_amount: totals.commission,
       net_amount: totals.net,
       ai_notes: aiNotes || null,
