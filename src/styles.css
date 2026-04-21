@@ -50,39 +50,43 @@
 }
 
 :root {
-  --primary: 158 64% 42%;
+  /* نسبتي brand - warm orange primary, deep teal secondary */
+  --primary: 22 88% 52%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 40% 20%;
+  --secondary: 188 45% 28%;
   --secondary-foreground: 0 0% 100%;
-  --background: 210 20% 98%;
-  --foreground: 220 40% 13%;
+  --background: 35 40% 97%;
+  --foreground: 20 30% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 220 40% 13%;
+  --card-foreground: 20 30% 15%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 40% 13%;
-  --muted: 210 20% 94%;
-  --muted-foreground: 220 10% 45%;
-  --accent: 38 92% 50%;
-  --accent-foreground: 220 40% 13%;
+  --popover-foreground: 20 30% 15%;
+  --muted: 30 25% 94%;
+  --muted-foreground: 20 12% 42%;
+  --accent: 38 95% 55%;
+  --accent-foreground: 20 30% 15%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --success: 158 64% 42%;
+  --success: 158 60% 40%;
   --success-foreground: 0 0% 100%;
   --warning: 38 92% 50%;
-  --warning-foreground: 220 40% 13%;
-  --border: 220 13% 90%;
-  --input: 220 13% 90%;
-  --ring: 158 64% 42%;
-  --radius: 0.75rem;
-  --gradient-primary: linear-gradient(135deg, hsl(158 64% 42%) 0%, hsl(158 64% 32%) 100%);
-  --gradient-secondary: linear-gradient(135deg, hsl(220 40% 20%) 0%, hsl(220 40% 30%) 100%);
-  --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(38 92% 60%) 100%);
-  --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
-  --shadow-sm: 0 1px 2px 0 hsl(220 40% 13% / 0.05);
-  --shadow-md: 0 4px 6px -1px hsl(220 40% 13% / 0.1);
-  --shadow-lg: 0 10px 15px -3px hsl(220 40% 13% / 0.1);
-  --shadow-xl: 0 20px 25px -5px hsl(220 40% 13% / 0.1);
-  --shadow-glow: 0 0 20px hsl(158 64% 42% / 0.3);
+  --warning-foreground: 20 30% 15%;
+  --border: 30 20% 88%;
+  --input: 30 20% 88%;
+  --ring: 22 88% 52%;
+  --radius: 1rem;
+  --gradient-primary: linear-gradient(135deg, hsl(22 88% 52%) 0%, hsl(32 95% 58%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(188 45% 28%) 0%, hsl(188 45% 38%) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(38 95% 55%) 0%, hsl(45 95% 62%) 100%);
+  --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(35 40% 98%) 100%);
+  --gradient-warm: linear-gradient(135deg, hsl(22 88% 52%) 0%, hsl(38 95% 55%) 50%, hsl(45 95% 62%) 100%);
+  --shadow-sm: 0 1px 2px 0 hsl(22 30% 20% / 0.05);
+  --shadow-md: 0 4px 12px -2px hsl(22 30% 20% / 0.1);
+  --shadow-lg: 0 10px 25px -5px hsl(22 30% 20% / 0.12);
+  --shadow-xl: 0 20px 40px -8px hsl(22 30% 20% / 0.15);
+  --shadow-glow: 0 0 24px hsl(22 88% 52% / 0.35);
+  --shadow-soft: 0 2px 8px -2px hsl(22 30% 20% / 0.08);
+  --shadow-elegant: 0 8px 30px -6px hsl(22 30% 20% / 0.15);
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
   --sidebar-primary: 240 5.9% 10%;
@@ -143,9 +147,21 @@
   .gradient-secondary { background: var(--gradient-secondary); }
   .gradient-accent { background: var(--gradient-accent); }
   .gradient-card { background: var(--gradient-card); }
+  .gradient-warm { background: var(--gradient-warm); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
-  .glass { background-color: hsl(var(--card) / 0.8); backdrop-filter: blur(12px); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .glass { background-color: hsl(var(--card) / 0.85); backdrop-filter: blur(16px); }
+  /* Mobile app touch target — minimum 44x44 */
+  .tap { min-width: 44px; min-height: 44px; }
+  .tap-lg { min-width: 48px; min-height: 48px; }
+  /* iOS-style press feedback */
+  .press { transition: transform 0.15s ease, opacity 0.15s ease; }
+  .press:active { transform: scale(0.96); opacity: 0.85; }
 }
+
+/* Prevent text selection on UI controls (mobile-app feel) */
+button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: hsl(var(--muted)); border-radius: 9999px; }
