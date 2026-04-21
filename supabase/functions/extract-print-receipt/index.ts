@@ -106,13 +106,16 @@ Deno.serve(async (req) => {
   "is_receipt": true | false,
   "customer_name": "اسم العميل أو null",
   "receipt_date": "YYYY-MM-DD أو null",
+  "line_items": [
+    { "width_cm": رقم, "height_cm": رقم, "quantity": رقم, "meters": رقم, "unit": "cm"|"m"|"mm", "raw": "النص كما قرأته" }
+  ],
   "total_meters": رقم أو null,
   "meters_source": "manual_total" | "line_items" | "calculated_from_dimensions" | "unknown",
   "calculated_meters_from_dimensions": رقم أو null,
   "written_total_meters": رقم أو null,
   "sanity_check_passed": true | false,
   "ai_confidence": 0-100,
-  "ai_notes": "اشرح بالعربية: خطوات استنتاجك، وإذا تجاهلت رقماً مكتوباً لأنه يبدو سعراً بالجنيه اذكر ذلك صراحة"
+  "ai_notes": "اشرح بالعربية: كم بند استخرجت، خطوات استنتاجك، وأي تحفظات"
 }`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
