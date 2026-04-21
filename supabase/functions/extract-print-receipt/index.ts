@@ -152,6 +152,28 @@ Deno.serve(async (req) => {
       throw new Error("فشل تحليل رد الذكاء الاصطناعي");
     }
 
+    // Safety net: if AI returned both a written_total and calculated_from_dimensions
+    // and they differ wildly, prefer the calculated value. This protects against cases
+    // where the accountant wrote the price in the meters field.
+    try {
+      const calc = Number(parsed.calculated_meters_from_dimensions);
+      const written = Number(parsed.written_total_meters);
+      const current = Number(parsed.total_meters);
+      if (
+        Number.isFinite(calc) && calc > 0 &&
+        Number.isFinite(written) && written > 0 &&
+        Number.isFinite(current) &&
+        current === written &&
+        written > calc * 3 // written is more than 3x the calculated — suspicious
+      ) {
+        parsed.total_meters = calc;
+        parsed.meters_source = "calculated_from_dimensions";
+        parsed.sanity_check_passed = false;
+        parsed.ai_notes = `[تصحيح تلقائي] الرقم المكتوب (${written}) يبدو أنه السعر بالجنيه وليس الأمتار، تم استبداله بمجموع المقاسات (${calc}). ${parsed.ai_notes ?? ""}`;
+        parsed.ai_confidence = Math.min(Number(parsed.ai_confidence) || 60, 65);
+      }
+    } catch (_) { /* ignore sanity check errors */ }
+
     return new Response(JSON.stringify({ success: true, data: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
