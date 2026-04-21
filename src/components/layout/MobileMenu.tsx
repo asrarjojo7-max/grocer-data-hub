@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
   Store,
@@ -11,7 +12,6 @@ import {
   Settings,
   LogOut,
   MessageCircle,
-  Printer,
   User,
 } from "lucide-react";
 
@@ -45,12 +45,10 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
         <SheetHeader className="p-4 border-b border-border">
           <SheetTitle asChild>
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                <Printer className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={logo} alt="نسبتي" className="w-12 h-12 rounded-xl shadow-soft" />
               <div className="text-right">
-                <h1 className="font-bold text-foreground">إيصالات الطباعة</h1>
-                <p className="text-xs text-muted-foreground font-normal">نظام المحاسبين</p>
+                <h1 className="font-extrabold text-foreground text-lg">نسبتي</h1>
+                <p className="text-xs text-muted-foreground font-normal">حساب عمولات المصممين</p>
               </div>
             </div>
           </SheetTitle>
@@ -65,12 +63,12 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
                 to={item.path}
                 onClick={() => onOpenChange(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all active:scale-[0.98]",
+                  "flex items-center gap-3 px-4 py-4 rounded-2xl transition-all press",
                   active ? "gradient-primary text-primary-foreground shadow-md" : "hover:bg-muted"
                 )}
               >
                 <item.icon className={cn("w-5 h-5 shrink-0", active ? "text-primary-foreground" : "text-muted-foreground")} />
-                <span className={cn("font-medium", active ? "text-primary-foreground" : "text-foreground")}>
+                <span className={cn("font-medium text-base", active ? "text-primary-foreground" : "text-foreground")}>
                   {item.label}
                 </span>
               </Link>
@@ -78,14 +76,18 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
           })}
         </nav>
 
-        <div className="p-3 border-t border-border">
+        <div className="p-3 border-t border-border space-y-3">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-destructive/10 text-destructive transition-colors active:scale-[0.98]"
+            className="flex items-center gap-3 w-full px-4 py-4 rounded-2xl hover:bg-destructive/10 text-destructive transition-colors press"
           >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium">تسجيل الخروج</span>
+            <span className="font-medium text-base">تسجيل الخروج</span>
           </button>
+          <div className="text-center text-[11px] text-muted-foreground/80 leading-relaxed">
+            <p>تطوير <span className="text-primary font-semibold">مجاهد آدم</span></p>
+            <p>suda-technologeis.com · © 2026</p>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
   Store,
@@ -12,7 +13,6 @@ import {
   LogOut,
   ChevronRight,
   MessageCircle,
-  Printer,
   User,
 } from "lucide-react";
 
@@ -51,16 +51,14 @@ export function Sidebar() {
       <div className="flex h-16 items-center justify-between px-4 border-b border-border">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-              <Printer className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="نسبتي" className="w-10 h-10 rounded-xl shadow-soft" />
             <div>
-              <h1 className="font-bold text-foreground">إيصالات الطباعة</h1>
-              <p className="text-xs text-muted-foreground">نظام المحاسبين</p>
+              <h1 className="font-extrabold text-foreground">نسبتي</h1>
+              <p className="text-xs text-muted-foreground">حساب العمولات</p>
             </div>
           </div>
         )}
-        <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg hover:bg-muted transition-colors press">
           <ChevronRight className={cn("w-5 h-5 text-muted-foreground transition-transform", collapsed && "rotate-180")} />
         </button>
       </div>
@@ -73,7 +71,7 @@ export function Sidebar() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 hover:bg-muted group",
+                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 hover:bg-muted group press",
                 isActive && "gradient-primary text-primary-foreground shadow-md"
               )}
             >
@@ -88,14 +86,20 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
+      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border space-y-2">
         <button
           onClick={handleLogout}
-          className={cn("flex items-center gap-3 w-full px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-colors")}
+          className={cn("flex items-center gap-3 w-full px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-colors press")}
         >
           <LogOut className="w-5 h-5 shrink-0" />
           {!collapsed && <span className="font-medium">تسجيل الخروج</span>}
         </button>
+        {!collapsed && (
+          <div className="text-center text-[10px] text-muted-foreground/70 leading-tight pt-1">
+            <p>تطوير <span className="text-primary font-semibold">مجاهد آدم</span></p>
+            <p>suda-technologeis.com · © 2026</p>
+          </div>
+        )}
       </div>
     </aside>
   );

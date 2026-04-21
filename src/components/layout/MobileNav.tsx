@@ -27,29 +27,29 @@ export function MobileNav() {
   return (
     <>
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.08)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/98 backdrop-blur-xl border-t border-border shadow-[0_-4px_24px_-4px_hsl(var(--foreground)/0.1)] pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-5 h-[64px]">
           {visible.slice(0, 4).map((item) => {
             const active = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className="flex flex-col items-center justify-center gap-1 relative active:scale-95 transition-transform"
+                className="flex flex-col items-center justify-center gap-1 relative press tap"
               >
                 {active && (
-                  <span className="absolute top-0 h-1 w-10 rounded-b-full bg-primary" />
+                  <span className="absolute top-0 h-1 w-12 rounded-b-full gradient-primary" />
                 )}
                 <item.icon
                   className={cn(
-                    "w-5 h-5 transition-colors",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "w-6 h-6 transition-all",
+                    active ? "text-primary scale-110" : "text-muted-foreground"
                   )}
                 />
                 <span
                   className={cn(
-                    "text-[10px] font-medium transition-colors",
+                    "text-[11px] font-semibold transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                 >
@@ -60,10 +60,10 @@ export function MobileNav() {
           })}
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform"
+            className="flex flex-col items-center justify-center gap-1 press tap"
           >
-            <Menu className="w-5 h-5 text-muted-foreground" />
-            <span className="text-[10px] font-medium text-muted-foreground">المزيد</span>
+            <Menu className="w-6 h-6 text-muted-foreground" />
+            <span className="text-[11px] font-semibold text-muted-foreground">المزيد</span>
           </button>
         </div>
       </nav>
