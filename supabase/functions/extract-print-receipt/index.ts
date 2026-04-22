@@ -287,7 +287,7 @@ Deno.serve(async (req) => {
           parsed.meters_source = "calculated_from_dimensions";
         }
         if (changed) {
-          parsed.ai_notes = `[تصحيح خوارزمية الرولات] أعاد النظام حساب الأمتار حسب رولات [100,150,200,320] للخامات العامة (والصافي للاستيكر). المجموع السابق ${oldCalc || "غير محسوب"} → ${recomputedSum}. ${parsed.ai_notes ?? ""}`;
+          parsed.ai_notes = `[تصحيح خوارزمية الرولات] أعاد النظام حساب الأمتار حسب رولات [100,150,200,300] للخامات العامة، والاستيكر بالمقاس الصافي ضمن رولات [100,120,150]. المجموع السابق ${oldCalc || "غير محسوب"} → ${recomputedSum}. ${parsed.ai_notes ?? ""}`;
         }
       }
     } catch (e) { console.error("roll recompute failed:", e); }
