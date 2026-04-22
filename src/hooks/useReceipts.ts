@@ -90,11 +90,15 @@ export function useUserProfile() {
   });
 }
 
+// Extract data from one or more receipt page images. The edge function accepts
+// `imagesBase64[]` so we can send a multi-page receipt as a single analysis call
+// and get back combined line items + a single total.
 export function useExtractReceipt() {
   return useMutation({
-    mutationFn: async (imageBase64: string) => {
+    mutationFn: async (images: string | string[]) => {
+      const imagesBase64 = Array.isArray(images) ? images : [images];
       const { data, error } = await supabase.functions.invoke("extract-print-receipt", {
-        body: { imageBase64 },
+        body: { imagesBase64 },
       });
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
@@ -114,23 +118,48 @@ export function useExtractReceipt() {
 export function useCreateReceipt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (r: Partial<PrintReceipt> & { image_file?: File | null }) => {
+    mutationFn: async (
+      r: Partial<PrintReceipt> & { image_file?: File | null; image_files?: File[] | null }
+    ) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("يجب تسجيل الدخول");
 
-      let image_url: string | null = r.image_url ?? null;
-      if (r.image_file) {
-        const path = `${user.id}/${Date.now()}-${r.image_file.name}`;
-        const { error: upErr } = await supabase.storage.from("receipts").upload(path, r.image_file);
-        if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("receipts").getPublicUrl(path);
-        image_url = pub.publicUrl;
+      // Collect all files (single or multi-page) and dedupe-check by hash first.
+      const files: File[] = (r.image_files && r.image_files.length)
+        ? r.image_files
+        : (r.image_file ? [r.image_file] : []);
+
+      let image_hashes: string[] = [];
+      if (files.length) {
+        image_hashes = await hashFiles(files);
+        const dupes = await findReceiptsByHashes(image_hashes);
+        if (dupes.length) {
+          const ids = dupes.map((d) => d.id.slice(0, 8)).join("، ");
+          throw new Error(`هذا الإيصال (أو إحدى صفحاته) تم رفعه من قبل — رقم #${ids}`);
+        }
       }
 
-      const { image_file, ...rest } = r as any;
+      // Upload each page to storage.
+      const image_urls: string[] = [];
+      for (const f of files) {
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${f.name}`;
+        const { error: upErr } = await supabase.storage.from("receipts").upload(path, f);
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("receipts").getPublicUrl(path);
+        image_urls.push(pub.publicUrl);
+      }
+
+      const image_url: string | null = image_urls[0] ?? r.image_url ?? null;
+      const image_hash: string | null = image_hashes[0] ?? null;
+
+      const { image_file, image_files, ...rest } = r as any;
       const { data, error } = await supabase.from("print_receipts" as any).insert({
         ...rest,
         image_url,
+        image_urls: image_urls.length ? image_urls : null,
+        image_hash,
+        image_hashes: image_hashes.length ? image_hashes : null,
+        pages_count: Math.max(1, files.length || 1),
         user_id: user.id,
       }).select().single();
       if (error) throw error;
