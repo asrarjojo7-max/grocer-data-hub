@@ -230,9 +230,12 @@ Deno.serve(async (req) => {
         if (unit === "m" || unit === "mm") return Number(item.meters) || null;
 
         if (mat === "sticker") {
-          if (w > STICKER_MAX && h > STICKER_MAX) return null;
+          // Sticker uses actual (net) size; verify smallest dim fits within max sticker roll.
+          const minDim = Math.min(w, h);
+          if (minDim > STICKER_MAX) return null;
+          const fitRoll = STICKER_ROLLS.find((r) => r >= minDim) ?? null;
           const m = (w * h * q) / 10000;
-          item.roll_used_cm = null;
+          item.roll_used_cm = fitRoll;
           return Math.round(m * 100) / 100;
         }
         if (!generalMats.has(mat)) return Number(item.meters) || null;
