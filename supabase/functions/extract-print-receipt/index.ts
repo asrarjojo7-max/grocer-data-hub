@@ -214,7 +214,8 @@ Deno.serve(async (req) => {
     // Recompute each line item's meters using the documented algorithm so even
     // if the AI mis-applied the rule we still bill commission on the correct value.
     try {
-      const ROLLS = [100, 150, 200, 320];
+      const ROLLS = [100, 150, 200, 300];
+      const STICKER_ROLLS = [100, 120, 150];
       const STICKER_MAX = 150;
       const generalMats = new Set(["flex", "banner", "reflective", "mesh", "other"]);
 
