@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
   "customer_name": "اسم العميل أو null",
   "receipt_date": "YYYY-MM-DD أو null",
   "line_items": [
-    { "width_cm": رقم, "height_cm": رقم, "quantity": رقم, "meters": رقم, "unit": "cm"|"m"|"mm", "raw": "النص كما قرأته" }
+    { "width_cm": رقم, "height_cm": رقم, "quantity": رقم, "material": "flex|banner|reflective|mesh|sticker|other", "material_inherited": true|false, "roll_used_cm": رقم أو null, "meters": رقم, "unit": "cm"|"m"|"mm", "raw": "النص كما قرأته" }
   ],
   "total_meters": رقم أو null,
   "meters_source": "manual_total" | "line_items" | "calculated_from_dimensions" | "unknown",
