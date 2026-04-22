@@ -105,7 +105,7 @@ export default function NewReceipt() {
       notes: notes || null,
       is_confirmed: confirm,
       confirmed_at: confirm ? new Date().toISOString() : null,
-      image_file: imageFile,
+      image_files: imageFiles,
     } as any);
     navigate("/my-receipts");
   };
@@ -119,24 +119,78 @@ export default function NewReceipt() {
 
       <div className="grid lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
-          <CardHeader><CardTitle>صورة الإيصال</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>صور الإيصال</span>
+              {imageFiles.length > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {imageFiles.length} {imageFiles.length === 1 ? "صفحة" : "صفحات"}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
           <CardContent>
-            {!imagePreview ? (
+            {duplicateWarning && (
+              <Alert className="mb-3 bg-destructive/10 border-destructive">
+                <Info className="w-4 h-4" />
+                <AlertDescription className="text-destructive font-medium">{duplicateWarning}</AlertDescription>
+              </Alert>
+            )}
+
+            {imagePreviews.length === 0 ? (
               <label className="border-2 border-dashed border-border rounded-xl p-12 text-center cursor-pointer hover:bg-muted transition-colors block">
                 <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="font-medium">اضغط لرفع صورة الإيصال</p>
-                <p className="text-sm text-muted-foreground mt-1">أو التقط صورة بالكاميرا</p>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                <p className="font-medium">اضغط لرفع صور الإيصال</p>
+                <p className="text-sm text-muted-foreground mt-1">يمكنك اختيار عدة صور إذا كان الإيصال متعدد الصفحات</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                />
               </label>
             ) : (
-              <div className="relative">
-                <img src={imagePreview} alt="receipt" className="w-full rounded-lg border" />
-                <Button size="icon" variant="destructive" className="absolute top-2 left-2" onClick={() => { setImagePreview(""); setImageFile(null); }}>
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button size="lg" className="w-full mt-3 gap-2 h-12 rounded-xl" onClick={handleAnalyze} disabled={extract.isPending}>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {imagePreviews.map((src, idx) => (
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border bg-muted">
+                      <img src={src} alt={`صفحة ${idx + 1}`} className="w-full h-28 object-cover" />
+                      <div className="absolute top-1 right-1 bg-background/90 backdrop-blur rounded-md px-1.5 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> {idx + 1}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 left-1 h-6 w-6"
+                        onClick={() => removePage(idx)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <label className="flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted transition-colors">
+                    <Plus className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1">إضافة صفحة</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                    />
+                  </label>
+                </div>
+                <Button
+                  size="lg"
+                  className="w-full gap-2 h-12 rounded-xl"
+                  onClick={handleAnalyze}
+                  disabled={extract.isPending}
+                >
                   {extract.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                  تحليل بالذكاء الاصطناعي
+                  تحليل {imageFiles.length > 1 ? `${imageFiles.length} صفحات` : "بالذكاء الاصطناعي"}
                 </Button>
               </div>
             )}
