@@ -15,7 +15,42 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `أنت خبير محاسب متخصص في قراءة إيصالات الطباعة المكتوبة بخط اليد العربي السوداني والعربي عموماً، ومهمتك الأساسية هي الحصول على **عدد الأمتار الحقيقي** من الإيصال وليس مجرد قراءة أول رقم يظهر أمامك.
+    const systemPrompt = `أنت خبير محاسب متخصص في قراءة إيصالات الطباعة المكتوبة بخط اليد العربي السوداني والعربي عموماً، ومهمتك الأساسية هي الحصول على **عدد الأمتار الحقيقي حسب خوارزمية الرولات** من الإيصال وليس مجرد قراءة أول رقم يظهر أمامك.
+
+== ⭐ خوارزمية حساب الأمتار حسب نوع الخامة (الأهم في عملك) ==
+المحاسب لا يحسب الأمتار من المقاس الخام (عرض×ارتفاع÷10000)، بل يحسبها حسب **عرض الرولة المطلوبة لكل خامة**. هذه القواعد التي يجب أن تطبقها بالضبط:
+
+**أنواع الخامات الشائعة:**
+- فلكس (flex) — خامة عامة تستخدم الرولات.
+- بنر (banner) — خامة عامة.
+- بنر عاكس / ريفلكتيف (reflective) — خامة عامة.
+- مش / mesh — خامة عامة.
+- استيكر / sticker — خامة خاصة (حساب صافي بدون تقريب رولة).
+- كانفس (canvas) إذا ذُكر — عاملها معاملة الخامات العامة.
+
+**خوارزمية الخامات العامة (فلكس، بنر، عاكس، مش):**
+- الرولات المتاحة بالسنتيمتر: [100, 150, 200, 320] (الرولة 320 تُسمّى 300 سم صافي للعرض).
+- لكل بند مع عرض W وارتفاع H وكمية Q:
+  1. جرّب الخيار الأول: أصغر رولة من القائمة ≥ W، فتكون المساحة = (rollW × H × Q) ÷ 10000.
+  2. جرّب الخيار الثاني: أصغر رولة من القائمة ≥ H (تدوير القماشة)، فتكون المساحة = (rollH × W × Q) ÷ 10000.
+  3. اختر الخيار ذو **المساحة الأقل**.
+  4. إذا كلا البُعدين > 320 → غير ممكن، اعتبر البند خطأً وأهمله مع ذكر السبب.
+
+**خوارزمية الاستيكر (sticker):**
+- الحد الأقصى للرولة 150 سم. إذا كلا البُعدين > 150 → غير ممكن.
+- الحساب صافي بدون تقريب: المساحة = (W × H × Q) ÷ 10000.
+
+== 🔁 إشارة "نفس الخامة أعلاه" (مهم) ==
+المصممون يكتبون الخامة في أول بند فقط ثم يستخدمون إشارات تدل على نفس الخامة:
+- شرطتين: //  أو  ==  أو  =
+- علامة الترديد: 〃  أو  "
+- خط أفقي ممتد: ـــــــــ  أو  ____
+- كلمة "نفسه" أو "السابق" أو "↑"
+- أو ترك الخانة فارغة بينما البنود السابقة لها خامة محددة.
+
+**القاعدة:** إذا وجدت أياً من هذه الإشارات في خانة الخامة لأي بند، **ورّث نوع الخامة من البند السابق له مباشرة**. واستمر في الوراثة عبر البنود حتى تجد خامة جديدة مذكورة صراحة.
+
+إذا كان البند الأول لا يذكر الخامة بتاتاً، اعتبرها "flex" افتراضياً وضع تحفظ في ai_notes.
 
 == خبرتك في الخط العربي ==
 أنت تفهم تماماً أن خط اليد يختلف جذرياً من شخص لآخر:
@@ -47,13 +82,13 @@ Deno.serve(async (req) => {
 - لا تخلط بين رقم المقاس ورقم الكمية: الأرقام الكبيرة (>20) غالباً سنتيمترات، الأرقام الصغيرة (1-20) قد تكون كمية أو أمتار.
 
 **وحدات القياس:**
-- لتحويل سم إلى متر مربع: (العرض_سم × الطول_سم × الكمية) ÷ 10000.
-- إذا كُتب "م" أو "متر" بجانب الرقم → متر مباشرة، لا تقسم على 10000.
-- إذا كان كلا الرقمين > 10 → غالباً سنتيمترات (مثل 200×150 = 3 م²).
-- إذا كان أحدهما ≤ 10 (مثل 2×3 أو 1.5×2) → غالباً بالمتر مباشرة.
-- إذا وُجدت وحدة "مم" (ملم) → اقسم على 1000 قبل الحساب.
+- لتحويل سم إلى متر مربع (صافي، للاستيكر فقط): (W × H × Q) ÷ 10000.
+- **للخامات العامة لا تستخدم الحساب الصافي**؛ استخدم خوارزمية الرولات أعلاه (أصغر رولة من [100,150,200,320] ≥ أحد البُعدين، واختر الخيار الأقل مساحة).
+- إذا كُتب "م" أو "متر" بجانب الرقم → الرقم بالمتر مباشرة.
+- إذا كان كلا الرقمين > 10 → سنتيمترات.
+- إذا وُجدت "مم" → اقسم على 1000 أولاً.
 
-**للإخراج**: أضف حقل line_items (مصفوفة) في JSON، كل عنصر يحتوي: width_cm, height_cm, quantity, meters, unit (cm|m|mm), raw. ثم calculated_meters_from_dimensions = مجموع meters لكل البنود.
+**لكل بند في line_items أرجع**: width_cm, height_cm, quantity, material (flex|banner|reflective|mesh|sticker|other), material_inherited (true إذا ورّثتها), roll_used_cm (الرولة المستخدمة بالسنتيمتر، null للاستيكر/المتر المباشر), meters (المساحة النهائية بعد الخوارزمية)، unit, raw. ثم calculated_meters_from_dimensions = مجموع meters.
 
 == ⚠️ قاعدة الذكاء الحرجة: التحقق من منطقية الأمتار ==
 **هذه أهم قاعدة في عملك**: المحاسبون أحياناً يكتبون إجمالي **السعر بالجنيه** في خانة الأمتار أو بمكان مخصص للأمتار، والنظام السابق كان يثق بهم بشكل أعمى ويحسب النسبة على إجمالي سعر بدلاً من الأمتار، فيعطي نتائج كارثية.
@@ -107,7 +142,7 @@ Deno.serve(async (req) => {
   "customer_name": "اسم العميل أو null",
   "receipt_date": "YYYY-MM-DD أو null",
   "line_items": [
-    { "width_cm": رقم, "height_cm": رقم, "quantity": رقم, "meters": رقم, "unit": "cm"|"m"|"mm", "raw": "النص كما قرأته" }
+    { "width_cm": رقم, "height_cm": رقم, "quantity": رقم, "material": "flex|banner|reflective|mesh|sticker|other", "material_inherited": true|false, "roll_used_cm": رقم أو null, "meters": رقم, "unit": "cm"|"m"|"mm", "raw": "النص كما قرأته" }
   ],
   "total_meters": رقم أو null,
   "meters_source": "manual_total" | "line_items" | "calculated_from_dimensions" | "unknown",
@@ -173,9 +208,86 @@ Deno.serve(async (req) => {
       throw new Error("فشل تحليل رد الذكاء الاصطناعي");
     }
 
+    // Server-side roll algorithm safety net.
+    // Recompute each line item's meters using the documented algorithm so even
+    // if the AI mis-applied the rule we still bill commission on the correct value.
+    try {
+      const ROLLS = [100, 150, 200, 320];
+      const STICKER_MAX = 150;
+      const generalMats = new Set(["flex", "banner", "reflective", "mesh", "other"]);
+
+      const recomputeMeters = (item: any): number | null => {
+        const w = Number(item.width_cm);
+        const h = Number(item.height_cm);
+        const q = Number(item.quantity) || 1;
+        const mat = String(item.material ?? "flex").toLowerCase();
+        const unit = String(item.unit ?? "cm").toLowerCase();
+        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+        // If item is already in meters or mm, trust the AI value (no roll math).
+        if (unit === "m" || unit === "mm") return Number(item.meters) || null;
+
+        if (mat === "sticker") {
+          if (w > STICKER_MAX && h > STICKER_MAX) return null;
+          const m = (w * h * q) / 10000;
+          item.roll_used_cm = null;
+          return Math.round(m * 100) / 100;
+        }
+        if (!generalMats.has(mat)) return Number(item.meters) || null;
+
+        const r1 = ROLLS.find((r) => r >= w);
+        const r2 = ROLLS.find((r) => r >= h);
+        const opts: Array<{ roll: number; area: number }> = [];
+        if (r1) opts.push({ roll: r1, area: (r1 * h * q) / 10000 });
+        if (r2) opts.push({ roll: r2, area: (r2 * w * q) / 10000 });
+        if (!opts.length) return null;
+        const best = opts.reduce((p, c) => (p.area <= c.area ? p : c));
+        item.roll_used_cm = best.roll;
+        return Math.round(best.area * 100) / 100;
+      };
+
+      if (Array.isArray(parsed.line_items) && parsed.line_items.length > 0) {
+        // Inherit material across items if missing/empty (server-side fallback).
+        let lastMat: string | null = null;
+        for (const it of parsed.line_items) {
+          const m = (it.material ?? "").toString().trim().toLowerCase();
+          if (!m || ["//", "=", "==", "〃", "\"", "↑", "نفسه", "السابق"].includes(m)) {
+            if (lastMat) { it.material = lastMat; it.material_inherited = true; }
+          } else {
+            lastMat = m;
+          }
+        }
+
+        let recomputedSum = 0;
+        let changed = false;
+        for (const it of parsed.line_items) {
+          const newM = recomputeMeters(it);
+          if (newM != null) {
+            if (Math.abs(Number(it.meters) - newM) > 0.05) changed = true;
+            it.meters = newM;
+            recomputedSum += newM;
+          } else if (Number.isFinite(Number(it.meters))) {
+            recomputedSum += Number(it.meters);
+          }
+        }
+        recomputedSum = Math.round(recomputedSum * 100) / 100;
+
+        const oldCalc = Number(parsed.calculated_meters_from_dimensions);
+        parsed.calculated_meters_from_dimensions = recomputedSum;
+
+        // If total_meters was sourced from line items / dimensions, sync it.
+        const src = String(parsed.meters_source ?? "");
+        if (src === "line_items" || src === "calculated_from_dimensions" || !Number.isFinite(Number(parsed.total_meters))) {
+          parsed.total_meters = recomputedSum;
+          parsed.meters_source = "calculated_from_dimensions";
+        }
+        if (changed) {
+          parsed.ai_notes = `[تصحيح خوارزمية الرولات] أعاد النظام حساب الأمتار حسب رولات [100,150,200,320] للخامات العامة (والصافي للاستيكر). المجموع السابق ${oldCalc || "غير محسوب"} → ${recomputedSum}. ${parsed.ai_notes ?? ""}`;
+        }
+      }
+    } catch (e) { console.error("roll recompute failed:", e); }
+
     // Safety net: if AI returned both a written_total and calculated_from_dimensions
-    // and they differ wildly, prefer the calculated value. This protects against cases
-    // where the accountant wrote the price in the meters field.
+    // and they differ wildly, prefer the calculated value (price-in-meters-field guard).
     try {
       const calc = Number(parsed.calculated_meters_from_dimensions);
       const written = Number(parsed.written_total_meters);
@@ -185,7 +297,7 @@ Deno.serve(async (req) => {
         Number.isFinite(written) && written > 0 &&
         Number.isFinite(current) &&
         current === written &&
-        written > calc * 3 // written is more than 3x the calculated — suspicious
+        written > calc * 3
       ) {
         parsed.total_meters = calc;
         parsed.meters_source = "calculated_from_dimensions";
@@ -193,7 +305,7 @@ Deno.serve(async (req) => {
         parsed.ai_notes = `[تصحيح تلقائي] الرقم المكتوب (${written}) يبدو أنه السعر بالجنيه وليس الأمتار، تم استبداله بمجموع المقاسات (${calc}). ${parsed.ai_notes ?? ""}`;
         parsed.ai_confidence = Math.min(Number(parsed.ai_confidence) || 60, 65);
       }
-    } catch (_) { /* ignore sanity check errors */ }
+    } catch (_) { /* ignore */ }
 
     return new Response(JSON.stringify({ success: true, data: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
