@@ -20,8 +20,11 @@ export default function NewReceipt() {
   const extract = useExtractReceipt();
   const create = useCreateReceipt();
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  // Multi-page receipt support: a single customer receipt can span several pages,
+  // we keep them as parallel arrays of File + base64 preview so they're sent together
+  // to the AI as one analysis and saved as one record.
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [receiptDate, setReceiptDate] = useState(new Date().toISOString().slice(0, 10));
   const [branchId, setBranchId] = useState<string>("");
@@ -30,6 +33,7 @@ export default function NewReceipt() {
   const [notes, setNotes] = useState("");
   const [aiNotes, setAiNotes] = useState("");
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<string>("");
 
   const totals = useMemo(() => {
     const meters = Number(totalMeters) || 0;
@@ -39,23 +43,49 @@ export default function NewReceipt() {
     return { total, commission, net: total - commission, rate };
   }, [totalMeters, pricePerMeter]);
 
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return toast.error("الرجاء اختيار صورة");
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
+  const handleFiles = async (newFiles: File[]) => {
+    const valid = newFiles.filter((f) => f.type.startsWith("image/"));
+    if (!valid.length) return toast.error("الرجاء اختيار صور فقط");
+
+    // Hash & check duplicates BEFORE adding to the list so the designer
+    // is warned immediately rather than only at save time.
+    setDuplicateWarning("");
+    try {
+      const hashes = await hashFiles(valid);
+      const dupes = await findReceiptsByHashes(hashes);
+      if (dupes.length) {
+        const ids = dupes.map((d) => `#${d.id.slice(0, 8)}`).join("، ");
+        setDuplicateWarning(`تنبيه: هذه الصورة (أو إحدى الصفحات) تم رفعها سابقاً في الإيصال ${ids}`);
+        toast.error("هذه الصورة مرفوعة من قبل");
+        return;
+      }
+    } catch (e) {
+      console.warn("dup-check skipped:", e);
+    }
+
+    const previews = await Promise.all(valid.map(fileToDataUrl));
+    setImageFiles((prev) => [...prev, ...valid]);
+    setImagePreviews((prev) => [...prev, ...previews]);
+  };
+
+  const removePage = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleAnalyze = async () => {
-    if (!imagePreview) return toast.error("ارفع صورة أولاً");
-    const result = await extract.mutateAsync(imagePreview);
+    if (!imagePreviews.length) return toast.error("ارفع صورة أولاً");
+    const result = await extract.mutateAsync(imagePreviews);
     if (result.customer_name) setCustomerName(result.customer_name);
     if (result.receipt_date) setReceiptDate(result.receipt_date);
     if (result.total_meters != null) setTotalMeters(Number(result.total_meters));
     setAiNotes(result.ai_notes || "");
     setAiConfidence(result.ai_confidence ?? null);
-    toast.success("تم التحليل، راجع البيانات قبل الحفظ");
+    toast.success(
+      imagePreviews.length > 1
+        ? `تم تحليل ${imagePreviews.length} صفحات كإيصال واحد`
+        : "تم التحليل، راجع البيانات قبل الحفظ"
+    );
   };
 
   const handleSave = async (confirm = false) => {
