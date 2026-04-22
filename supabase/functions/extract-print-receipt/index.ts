@@ -208,9 +208,86 @@ Deno.serve(async (req) => {
       throw new Error("فشل تحليل رد الذكاء الاصطناعي");
     }
 
+    // Server-side roll algorithm safety net.
+    // Recompute each line item's meters using the documented algorithm so even
+    // if the AI mis-applied the rule we still bill commission on the correct value.
+    try {
+      const ROLLS = [100, 150, 200, 320];
+      const STICKER_MAX = 150;
+      const generalMats = new Set(["flex", "banner", "reflective", "mesh", "other"]);
+
+      const recomputeMeters = (item: any): number | null => {
+        const w = Number(item.width_cm);
+        const h = Number(item.height_cm);
+        const q = Number(item.quantity) || 1;
+        const mat = String(item.material ?? "flex").toLowerCase();
+        const unit = String(item.unit ?? "cm").toLowerCase();
+        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+        // If item is already in meters or mm, trust the AI value (no roll math).
+        if (unit === "m" || unit === "mm") return Number(item.meters) || null;
+
+        if (mat === "sticker") {
+          if (w > STICKER_MAX && h > STICKER_MAX) return null;
+          const m = (w * h * q) / 10000;
+          item.roll_used_cm = null;
+          return Math.round(m * 100) / 100;
+        }
+        if (!generalMats.has(mat)) return Number(item.meters) || null;
+
+        const r1 = ROLLS.find((r) => r >= w);
+        const r2 = ROLLS.find((r) => r >= h);
+        const opts: Array<{ roll: number; area: number }> = [];
+        if (r1) opts.push({ roll: r1, area: (r1 * h * q) / 10000 });
+        if (r2) opts.push({ roll: r2, area: (r2 * w * q) / 10000 });
+        if (!opts.length) return null;
+        const best = opts.reduce((p, c) => (p.area <= c.area ? p : c));
+        item.roll_used_cm = best.roll;
+        return Math.round(best.area * 100) / 100;
+      };
+
+      if (Array.isArray(parsed.line_items) && parsed.line_items.length > 0) {
+        // Inherit material across items if missing/empty (server-side fallback).
+        let lastMat: string | null = null;
+        for (const it of parsed.line_items) {
+          const m = (it.material ?? "").toString().trim().toLowerCase();
+          if (!m || ["//", "=", "==", "〃", "\"", "↑", "نفسه", "السابق"].includes(m)) {
+            if (lastMat) { it.material = lastMat; it.material_inherited = true; }
+          } else {
+            lastMat = m;
+          }
+        }
+
+        let recomputedSum = 0;
+        let changed = false;
+        for (const it of parsed.line_items) {
+          const newM = recomputeMeters(it);
+          if (newM != null) {
+            if (Math.abs(Number(it.meters) - newM) > 0.05) changed = true;
+            it.meters = newM;
+            recomputedSum += newM;
+          } else if (Number.isFinite(Number(it.meters))) {
+            recomputedSum += Number(it.meters);
+          }
+        }
+        recomputedSum = Math.round(recomputedSum * 100) / 100;
+
+        const oldCalc = Number(parsed.calculated_meters_from_dimensions);
+        parsed.calculated_meters_from_dimensions = recomputedSum;
+
+        // If total_meters was sourced from line items / dimensions, sync it.
+        const src = String(parsed.meters_source ?? "");
+        if (src === "line_items" || src === "calculated_from_dimensions" || !Number.isFinite(Number(parsed.total_meters))) {
+          parsed.total_meters = recomputedSum;
+          parsed.meters_source = "calculated_from_dimensions";
+        }
+        if (changed) {
+          parsed.ai_notes = `[تصحيح خوارزمية الرولات] أعاد النظام حساب الأمتار حسب رولات [100,150,200,320] للخامات العامة (والصافي للاستيكر). المجموع السابق ${oldCalc || "غير محسوب"} → ${recomputedSum}. ${parsed.ai_notes ?? ""}`;
+        }
+      }
+    } catch (e) { console.error("roll recompute failed:", e); }
+
     // Safety net: if AI returned both a written_total and calculated_from_dimensions
-    // and they differ wildly, prefer the calculated value. This protects against cases
-    // where the accountant wrote the price in the meters field.
+    // and they differ wildly, prefer the calculated value (price-in-meters-field guard).
     try {
       const calc = Number(parsed.calculated_meters_from_dimensions);
       const written = Number(parsed.written_total_meters);
@@ -220,7 +297,7 @@ Deno.serve(async (req) => {
         Number.isFinite(written) && written > 0 &&
         Number.isFinite(current) &&
         current === written &&
-        written > calc * 3 // written is more than 3x the calculated — suspicious
+        written > calc * 3
       ) {
         parsed.total_meters = calc;
         parsed.meters_source = "calculated_from_dimensions";
@@ -228,7 +305,7 @@ Deno.serve(async (req) => {
         parsed.ai_notes = `[تصحيح تلقائي] الرقم المكتوب (${written}) يبدو أنه السعر بالجنيه وليس الأمتار، تم استبداله بمجموع المقاسات (${calc}). ${parsed.ai_notes ?? ""}`;
         parsed.ai_confidence = Math.min(Number(parsed.ai_confidence) || 60, 65);
       }
-    } catch (_) { /* ignore sanity check errors */ }
+    } catch (_) { /* ignore */ }
 
     return new Response(JSON.stringify({ success: true, data: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
