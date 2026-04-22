@@ -16,6 +16,10 @@ export type PrintReceipt = {
   commission_amount: number;
   net_amount: number;
   image_url: string | null;
+  image_urls: string[] | null;
+  image_hash: string | null;
+  image_hashes: string[] | null;
+  pages_count: number;
   extracted_data: any;
   ai_confidence: number | null;
   ai_notes: string | null;
@@ -27,6 +31,26 @@ export type PrintReceipt = {
   created_at: string;
   updated_at: string;
 };
+
+// Look up existing receipts by image hash(es) for the current user.
+// Used to warn the designer that this exact image (or a page from it) was
+// already uploaded so commissions cannot be claimed twice for the same receipt.
+export async function findReceiptsByHashes(hashes: string[]): Promise<PrintReceipt[]> {
+  if (!hashes.length) return [];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const inList = hashes.map((h) => `"${h}"`).join(",");
+  const { data, error } = await supabase
+    .from("print_receipts" as any)
+    .select("*")
+    .eq("user_id", user.id)
+    .or(`image_hash.in.(${inList}),image_hashes.cs.${JSON.stringify(hashes)}`);
+  if (error) {
+    console.warn("duplicate check failed:", error);
+    return [];
+  }
+  return (data || []) as unknown as PrintReceipt[];
+}
 
 // Invalidate every query that depends on print_receipts so the dashboard,
 // recent list, top designers and reports all refresh after a mutation.
