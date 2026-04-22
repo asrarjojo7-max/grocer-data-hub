@@ -4,9 +4,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageBase64 } = await req.json();
-    if (!imageBase64) {
-      return new Response(JSON.stringify({ success: false, error: "imageBase64 مطلوب" }), {
+    const body = await req.json();
+    // Accept either a single image (imageBase64) or multiple pages (imagesBase64[])
+    const imagesBase64: string[] = Array.isArray(body.imagesBase64) && body.imagesBase64.length
+      ? body.imagesBase64
+      : (body.imageBase64 ? [body.imageBase64] : []);
+    if (!imagesBase64.length) {
+      return new Response(JSON.stringify({ success: false, error: "imageBase64 أو imagesBase64 مطلوب" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
