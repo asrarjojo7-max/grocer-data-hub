@@ -101,10 +101,14 @@ export type Database = {
           customer_name: string | null
           extracted_data: Json | null
           id: string
+          image_hash: string | null
+          image_hashes: Json | null
           image_url: string | null
+          image_urls: Json | null
           is_confirmed: boolean
           net_amount: number
           notes: string | null
+          pages_count: number
           price_per_meter: number
           receipt_date: string
           source: string
@@ -125,10 +129,14 @@ export type Database = {
           customer_name?: string | null
           extracted_data?: Json | null
           id?: string
+          image_hash?: string | null
+          image_hashes?: Json | null
           image_url?: string | null
+          image_urls?: Json | null
           is_confirmed?: boolean
           net_amount?: number
           notes?: string | null
+          pages_count?: number
           price_per_meter?: number
           receipt_date?: string
           source?: string
@@ -149,10 +157,14 @@ export type Database = {
           customer_name?: string | null
           extracted_data?: Json | null
           id?: string
+          image_hash?: string | null
+          image_hashes?: Json | null
           image_url?: string | null
+          image_urls?: Json | null
           is_confirmed?: boolean
           net_amount?: number
           notes?: string | null
+          pages_count?: number
           price_per_meter?: number
           receipt_date?: string
           source?: string

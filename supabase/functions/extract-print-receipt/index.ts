@@ -4,9 +4,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageBase64 } = await req.json();
-    if (!imageBase64) {
-      return new Response(JSON.stringify({ success: false, error: "imageBase64 مطلوب" }), {
+    const body = await req.json();
+    // Accept either a single image (imageBase64) or multiple pages (imagesBase64[])
+    const imagesBase64: string[] = Array.isArray(body.imagesBase64) && body.imagesBase64.length
+      ? body.imagesBase64
+      : (body.imageBase64 ? [body.imageBase64] : []);
+    if (!imagesBase64.length) {
+      return new Response(JSON.stringify({ success: false, error: "imageBase64 أو imagesBase64 مطلوب" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -171,9 +175,9 @@ Deno.serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "حلل هذا الإيصال بعناية. **مهم جداً**: لا تثق بأي رقم يبدو 'إجمالي الأمتار' قبل التحقق منه عبر جمع المقاسات الفعلية. إذا كان الرقم المكتوب كبيراً بشكل غير منطقي مقارنة بالمقاسات (مثلاً 20000 بينما المقاسات تعطي 67 متر)، فهو غالباً السعر بالجنيه وليس الأمتار — تجاهله واستخدم مجموع المقاسات. اذكر خطوات استنتاجك في ai_notes.",
+                text: `حلل هذا الإيصال بعناية. ${imagesBase64.length > 1 ? `**هذا إيصال واحد مكوّن من ${imagesBase64.length} صفحات/صور** — اعتبرها معاً واجمع كل البنود (line_items) من كل الصفحات في قائمة واحدة، واحسب total_meters على أساس مجموع كل البنود من كل الصفحات.` : ""} **مهم جداً**: لا تثق بأي رقم يبدو 'إجمالي الأمتار' قبل التحقق منه عبر جمع المقاسات الفعلية. إذا كان الرقم المكتوب كبيراً بشكل غير منطقي مقارنة بالمقاسات (مثلاً 20000 بينما المقاسات تعطي 67 متر)، فهو غالباً السعر بالجنيه وليس الأمتار — تجاهله واستخدم مجموع المقاسات. اذكر خطوات استنتاجك في ai_notes.`,
               },
-              { type: "image_url", image_url: { url: imageBase64 } },
+              ...imagesBase64.map((img: string) => ({ type: "image_url", image_url: { url: img } })),
             ],
           },
         ],

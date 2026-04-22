@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBranches } from "@/hooks/useBranches";
-import { useExtractReceipt, useCreateReceipt } from "@/hooks/useReceipts";
-import { Upload, Loader2, Sparkles, Info, X, Wallet } from "lucide-react";
+import { useExtractReceipt, useCreateReceipt, findReceiptsByHashes } from "@/hooks/useReceipts";
+import { hashFiles, fileToDataUrl } from "@/lib/imageHash";
+import { Upload, Loader2, Sparkles, Info, X, Wallet, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NewReceipt() {
@@ -19,8 +20,11 @@ export default function NewReceipt() {
   const extract = useExtractReceipt();
   const create = useCreateReceipt();
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  // Multi-page receipt support: a single customer receipt can span several pages,
+  // we keep them as parallel arrays of File + base64 preview so they're sent together
+  // to the AI as one analysis and saved as one record.
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [receiptDate, setReceiptDate] = useState(new Date().toISOString().slice(0, 10));
   const [branchId, setBranchId] = useState<string>("");
@@ -29,6 +33,7 @@ export default function NewReceipt() {
   const [notes, setNotes] = useState("");
   const [aiNotes, setAiNotes] = useState("");
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<string>("");
 
   const totals = useMemo(() => {
     const meters = Number(totalMeters) || 0;
@@ -38,23 +43,49 @@ export default function NewReceipt() {
     return { total, commission, net: total - commission, rate };
   }, [totalMeters, pricePerMeter]);
 
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return toast.error("الرجاء اختيار صورة");
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
+  const handleFiles = async (newFiles: File[]) => {
+    const valid = newFiles.filter((f) => f.type.startsWith("image/"));
+    if (!valid.length) return toast.error("الرجاء اختيار صور فقط");
+
+    // Hash & check duplicates BEFORE adding to the list so the designer
+    // is warned immediately rather than only at save time.
+    setDuplicateWarning("");
+    try {
+      const hashes = await hashFiles(valid);
+      const dupes = await findReceiptsByHashes(hashes);
+      if (dupes.length) {
+        const ids = dupes.map((d) => `#${d.id.slice(0, 8)}`).join("، ");
+        setDuplicateWarning(`تنبيه: هذه الصورة (أو إحدى الصفحات) تم رفعها سابقاً في الإيصال ${ids}`);
+        toast.error("هذه الصورة مرفوعة من قبل");
+        return;
+      }
+    } catch (e) {
+      console.warn("dup-check skipped:", e);
+    }
+
+    const previews = await Promise.all(valid.map(fileToDataUrl));
+    setImageFiles((prev) => [...prev, ...valid]);
+    setImagePreviews((prev) => [...prev, ...previews]);
+  };
+
+  const removePage = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleAnalyze = async () => {
-    if (!imagePreview) return toast.error("ارفع صورة أولاً");
-    const result = await extract.mutateAsync(imagePreview);
+    if (!imagePreviews.length) return toast.error("ارفع صورة أولاً");
+    const result = await extract.mutateAsync(imagePreviews);
     if (result.customer_name) setCustomerName(result.customer_name);
     if (result.receipt_date) setReceiptDate(result.receipt_date);
     if (result.total_meters != null) setTotalMeters(Number(result.total_meters));
     setAiNotes(result.ai_notes || "");
     setAiConfidence(result.ai_confidence ?? null);
-    toast.success("تم التحليل، راجع البيانات قبل الحفظ");
+    toast.success(
+      imagePreviews.length > 1
+        ? `تم تحليل ${imagePreviews.length} صفحات كإيصال واحد`
+        : "تم التحليل، راجع البيانات قبل الحفظ"
+    );
   };
 
   const handleSave = async (confirm = false) => {
@@ -74,7 +105,7 @@ export default function NewReceipt() {
       notes: notes || null,
       is_confirmed: confirm,
       confirmed_at: confirm ? new Date().toISOString() : null,
-      image_file: imageFile,
+      image_files: imageFiles,
     } as any);
     navigate("/my-receipts");
   };
@@ -88,24 +119,78 @@ export default function NewReceipt() {
 
       <div className="grid lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
-          <CardHeader><CardTitle>صورة الإيصال</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>صور الإيصال</span>
+              {imageFiles.length > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {imageFiles.length} {imageFiles.length === 1 ? "صفحة" : "صفحات"}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
           <CardContent>
-            {!imagePreview ? (
+            {duplicateWarning && (
+              <Alert className="mb-3 bg-destructive/10 border-destructive">
+                <Info className="w-4 h-4" />
+                <AlertDescription className="text-destructive font-medium">{duplicateWarning}</AlertDescription>
+              </Alert>
+            )}
+
+            {imagePreviews.length === 0 ? (
               <label className="border-2 border-dashed border-border rounded-xl p-12 text-center cursor-pointer hover:bg-muted transition-colors block">
                 <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="font-medium">اضغط لرفع صورة الإيصال</p>
-                <p className="text-sm text-muted-foreground mt-1">أو التقط صورة بالكاميرا</p>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                <p className="font-medium">اضغط لرفع صور الإيصال</p>
+                <p className="text-sm text-muted-foreground mt-1">يمكنك اختيار عدة صور إذا كان الإيصال متعدد الصفحات</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                />
               </label>
             ) : (
-              <div className="relative">
-                <img src={imagePreview} alt="receipt" className="w-full rounded-lg border" />
-                <Button size="icon" variant="destructive" className="absolute top-2 left-2" onClick={() => { setImagePreview(""); setImageFile(null); }}>
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button size="lg" className="w-full mt-3 gap-2 h-12 rounded-xl" onClick={handleAnalyze} disabled={extract.isPending}>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {imagePreviews.map((src, idx) => (
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border bg-muted">
+                      <img src={src} alt={`صفحة ${idx + 1}`} className="w-full h-28 object-cover" />
+                      <div className="absolute top-1 right-1 bg-background/90 backdrop-blur rounded-md px-1.5 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> {idx + 1}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 left-1 h-6 w-6"
+                        onClick={() => removePage(idx)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <label className="flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted transition-colors">
+                    <Plus className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1">إضافة صفحة</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                    />
+                  </label>
+                </div>
+                <Button
+                  size="lg"
+                  className="w-full gap-2 h-12 rounded-xl"
+                  onClick={handleAnalyze}
+                  disabled={extract.isPending}
+                >
                   {extract.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                  تحليل بالذكاء الاصطناعي
+                  تحليل {imageFiles.length > 1 ? `${imageFiles.length} صفحات` : "بالذكاء الاصطناعي"}
                 </Button>
               </div>
             )}
