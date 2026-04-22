@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBranches } from "@/hooks/useBranches";
-import { useExtractReceipt, useCreateReceipt } from "@/hooks/useReceipts";
-import { Upload, Loader2, Sparkles, Info, X, Wallet } from "lucide-react";
+import { useExtractReceipt, useCreateReceipt, findReceiptsByHashes } from "@/hooks/useReceipts";
+import { hashFiles, fileToDataUrl } from "@/lib/imageHash";
+import { Upload, Loader2, Sparkles, Info, X, Wallet, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NewReceipt() {
