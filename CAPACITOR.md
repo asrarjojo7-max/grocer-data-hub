@@ -18,16 +18,13 @@ cd <project-folder>
 # 2. ثبّت الحزم
 npm install
 
-# 3. ابنِ نسخة الويب
-npm run build
-
-# 4. أضف منصة Android (مرة واحدة فقط)
+# 3. أضف منصة Android (مرة واحدة فقط)
 npx cap add android
 
-# 5. زامن الكود مع المشروع الأصلي للأندرويد
-npx cap sync android
+# 4. ابنِ الويب وزامن مع android بأمر واحد
+npm run build:mobile
 
-# 6. افتح Android Studio
+# 5. افتح Android Studio
 npx cap open android
 ```
 
@@ -38,22 +35,26 @@ npx cap open android
 ## بعد كل تعديل في الكود
 
 ```bash
-npm run build
-npx cap sync android
+npm run build:mobile
 ```
+
+هذا الأمر يبني الويب (`vite build`) ثم يزامن الملفات مع مشروع Android تلقائياً.
 
 ## الوضع المباشر (Live Reload أثناء التطوير)
 
-ملف `capacitor.config.ts` يحتوي على `server.url` يشير إلى نسخة Lovable Preview، لذا التطبيق يحدّث نفسه فور أي تعديل تعمله في Lovable دون الحاجة لإعادة بناء كاملة.
+ملف `capacitor.config.ts` يحتوي على قسم `server` معلّق. لتفعيله:
 
-**قبل النشر النهائي**، احذف أو علّق على هذا الجزء حتى يستخدم التطبيق الملفات المحلية:
+1. افتح `capacitor.config.ts` وأزل التعليق عن قسم `server`:
+   ```ts
+   server: {
+     url: "https://id-preview--73b09833-bb90-4c31-815b-aa57457e1c13.lovable.app",
+     cleartext: true,
+   },
+   ```
+2. شغّل: `npx cap sync android`
+3. الآن التطبيق سيحدّث نفسه فور أي تعديل تعمله في Lovable دون الحاجة لإعادة بناء.
 
-```ts
-// server: {
-//   url: "...",
-//   cleartext: true,
-// },
-```
+**قبل النشر النهائي**، رجّع التعليق على هذا القسم وشغّل `npm run build:mobile` حتى يستخدم التطبيق الملفات المحلية ويعمل offline.
 
 ## الصلاحيات المطلوبة في Android
 
@@ -67,7 +68,14 @@ npx cap sync android
   android:maxSdkVersion="32" />
 ```
 
-## التحديث للحزم Capacitor
+## ملاحظات تقنية مهمة
+
+- **التطبيق يعمل client-side بالكامل**: يتصل بـ Supabase مباشرة من WebView، لذا لا يحتاج لأي سيرفر Node.js محلي على الهاتف.
+- **Edge Functions** (مثل `extract-print-receipt`) تعمل على Supabase Cloud وتُستدعى عبر HTTPS — تعمل تلقائياً داخل APK.
+- **حجم APK المتوقع**: ~8-12 MB.
+- **الحد الأدنى لإصدار Android**: Android 5.1 (API 22) أو أحدث.
+
+## التحديث لحزم Capacitor
 
 ```bash
 npx cap update android
