@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBranches } from "@/hooks/useBranches";
 import { useExtractReceipt, useCreateReceipt, findReceiptsByHashes } from "@/hooks/useReceipts";
 import { hashFiles, fileToDataUrl } from "@/lib/imageHash";
-import { Upload, Loader2, Sparkles, Info, X, Wallet, Plus, FileText } from "lucide-react";
+import { Upload, Loader2, Sparkles, Info, X, Wallet, Plus, FileText, Camera, Images } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NewReceipt() {
@@ -138,19 +138,39 @@ export default function NewReceipt() {
             )}
 
             {imagePreviews.length === 0 ? (
-              <label className="border-2 border-dashed border-border rounded-xl p-12 text-center cursor-pointer hover:bg-muted transition-colors block">
+              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
                 <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="font-medium">اضغط لرفع صور الإيصال</p>
-                <p className="text-sm text-muted-foreground mt-1">يمكنك اختيار عدة صور إذا كان الإيصال متعدد الصفحات</p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
-                />
-              </label>
+                <p className="font-medium mb-1">ارفع صور الإيصال</p>
+                <p className="text-sm text-muted-foreground mb-4">يمكنك اختيار عدة صور إذا كان الإيصال متعدد الصفحات</p>
+                <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
+                  <label className="cursor-pointer">
+                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl border bg-card hover:bg-accent hover:border-primary transition-colors">
+                      <Camera className="w-7 h-7 text-primary" />
+                      <span className="text-sm font-medium">الكاميرا</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                    />
+                  </label>
+                  <label className="cursor-pointer">
+                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl border bg-card hover:bg-accent hover:border-primary transition-colors">
+                      <Images className="w-7 h-7 text-primary" />
+                      <span className="text-sm font-medium">من المعرض</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                    />
+                  </label>
+                </div>
+              </div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -171,12 +191,22 @@ export default function NewReceipt() {
                     </div>
                   ))}
                   <label className="flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted transition-colors">
-                    <Plus className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground mt-1">إضافة صفحة</span>
+                    <Camera className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1">كاميرا</span>
                     <input
                       type="file"
                       accept="image/*"
                       capture="environment"
+                      className="hidden"
+                      onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
+                    />
+                  </label>
+                  <label className="flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted transition-colors">
+                    <Images className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1">من المعرض</span>
+                    <input
+                      type="file"
+                      accept="image/*"
                       multiple
                       className="hidden"
                       onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
