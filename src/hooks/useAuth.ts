@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { registerPushNotifications, unregisterPushNotifications } from "@/lib/pushNotifications";
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -13,13 +14,17 @@ export function useAuth() {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        const uid = s.user.id;
         setTimeout(() => {
-          supabase.from("user_roles").select("role").eq("user_id", s.user.id).then(({ data }) => {
+          supabase.from("user_roles").select("role").eq("user_id", uid).then(({ data }) => {
             setIsAdmin(!!data?.some((r) => r.role === "admin"));
           });
+          // Register device for push notifications (no-op on web)
+          registerPushNotifications(uid).catch((e) => console.error("[push] register:", e));
         }, 0);
       } else {
         setIsAdmin(false);
+        unregisterPushNotifications().catch(() => {});
       }
     });
 
@@ -27,9 +32,11 @@ export function useAuth() {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        supabase.from("user_roles").select("role").eq("user_id", session.user.id).then(({ data }) => {
+        const uid = session.user.id;
+        supabase.from("user_roles").select("role").eq("user_id", uid).then(({ data }) => {
           setIsAdmin(!!data?.some((r) => r.role === "admin"));
         });
+        registerPushNotifications(uid).catch((e) => console.error("[push] register:", e));
       }
       setLoading(false);
     });
@@ -41,3 +48,4 @@ export function useAuth() {
 
   return { session, user, loading, isAdmin, signOut };
 }
+
