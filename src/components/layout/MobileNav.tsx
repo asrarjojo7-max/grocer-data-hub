@@ -24,9 +24,16 @@ export function MobileNav() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const visible = items.filter((i) => !i.admin || isAdmin);
-  // In RTL: rightItems render on the right side (start), leftItems on the left side (end)
-  const rightItems = visible.slice(0, 2); // الرئيسية + إيصالاتي → يمين
-  const leftItems = visible.slice(2, 4);  // التقارير + الإيصالات → يسار
+  // Cap visible items so the bar never feels crowded.
+  // When everything fits (≤3 items), hide the "More" button entirely.
+  // When it doesn't (4 items for admin), drop the last nav item and surface "More" instead.
+  const MAX_INLINE = 3;
+  const showMore = visible.length > MAX_INLINE;
+  const inline = showMore ? visible.slice(0, MAX_INLINE) : visible;
+  // RTL: first half renders on the right (start), rest on the left (end)
+  const splitAt = Math.ceil(inline.length / 2);
+  const rightItems = inline.slice(0, splitAt);
+  const leftItems = inline.slice(splitAt);
   const isNewActive = location.pathname === "/receipts/new";
 
   const NavItem = ({ item }: { item: (typeof items)[number] }) => {
