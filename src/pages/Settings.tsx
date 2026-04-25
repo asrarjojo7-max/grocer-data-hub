@@ -5,12 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Store, Users as UsersIcon, Lock } from "lucide-react";
+import { Loader2, Save, Store, Users as UsersIcon, Lock, RotateCcw, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranches } from "@/hooks/useBranches";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const { user, isAdmin } = useAuth();
@@ -91,6 +102,56 @@ export default function Settings() {
     if (error) return toast.error(error.message);
     toast.success("تم تغيير كلمة المرور");
     setNewPassword("");
+  };
+
+  // Reset: deletes ALL print receipts (and therefore all meters/commissions
+  // history). Branches, users, profiles, and WhatsApp connections are kept.
+  const [resetting, setResetting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      // Delete all receipts. RLS allows admins to delete any row via has_role.
+      const { error } = await (supabase as any)
+        .from("print_receipts")
+        .delete()
+        .not("id", "is", null);
+      if (error) throw error;
+
+      // Try to clear stored receipt images too (best-effort, non-blocking).
+      try {
+        const { data: files } = await supabase.storage.from("receipts").list("", {
+          limit: 1000,
+          sortBy: { column: "name", order: "asc" },
+        });
+        if (files && files.length) {
+          // Recursively list user folders
+          const allPaths: string[] = [];
+          for (const f of files) {
+            if (f.id === null) {
+              const { data: sub } = await supabase.storage.from("receipts").list(f.name, { limit: 1000 });
+              sub?.forEach((s) => allPaths.push(`${f.name}/${s.name}`));
+            } else {
+              allPaths.push(f.name);
+            }
+          }
+          if (allPaths.length) await supabase.storage.from("receipts").remove(allPaths);
+        }
+      } catch (e) {
+        console.warn("storage cleanup skipped:", e);
+      }
+
+      toast.success("تم إعادة التعيين — حُذفت كل الإيصالات");
+      qc.invalidateQueries({ queryKey: ["print_receipts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats-v2"] });
+      qc.invalidateQueries({ queryKey: ["top-designers"] });
+      qc.invalidateQueries({ queryKey: ["recent-receipts"] });
+      setConfirmText("");
+    } catch (e: any) {
+      toast.error("فشل إعادة التعيين: " + (e?.message ?? "خطأ غير معروف"));
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
@@ -237,6 +298,66 @@ export default function Settings() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {isAdmin && (
+          <Card className="shadow-soft border-destructive/40">
+            <CardHeader className="flex flex-row items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <CardTitle className="text-destructive">إعادة تعيين البيانات</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  حذف كل الإيصالات والأمتار والنسب نهائياً. لن يتم حذف الفروع أو المستخدمين أو اتصالات الواتساب.
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2">
+                    <RotateCcw className="w-4 h-4" />
+                    إعادة تعيين كل شيء
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم حذف <strong>كل الإيصالات</strong> وكل الأمتار والنسب المسجّلة بشكل نهائي ولا يمكن التراجع.
+                      <br />
+                      للتأكيد اكتب: <strong>تأكيد</strong>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <Input
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder="اكتب: تأكيد"
+                    autoFocus
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction
+                      disabled={confirmText.trim() !== "تأكيد" || resetting}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleReset();
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+                    >
+                      {resetting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4" />
+                      )}
+                      نعم، احذف كل شيء
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
         )}
 
         <Card className="shadow-soft">
