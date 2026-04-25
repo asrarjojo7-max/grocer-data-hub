@@ -104,6 +104,56 @@ export default function Settings() {
     setNewPassword("");
   };
 
+  // Reset: deletes ALL print receipts (and therefore all meters/commissions
+  // history). Branches, users, profiles, and WhatsApp connections are kept.
+  const [resetting, setResetting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      // Delete all receipts. RLS allows admins to delete any row via has_role.
+      const { error } = await (supabase as any)
+        .from("print_receipts")
+        .delete()
+        .not("id", "is", null);
+      if (error) throw error;
+
+      // Try to clear stored receipt images too (best-effort, non-blocking).
+      try {
+        const { data: files } = await supabase.storage.from("receipts").list("", {
+          limit: 1000,
+          sortBy: { column: "name", order: "asc" },
+        });
+        if (files && files.length) {
+          // Recursively list user folders
+          const allPaths: string[] = [];
+          for (const f of files) {
+            if (f.id === null) {
+              const { data: sub } = await supabase.storage.from("receipts").list(f.name, { limit: 1000 });
+              sub?.forEach((s) => allPaths.push(`${f.name}/${s.name}`));
+            } else {
+              allPaths.push(f.name);
+            }
+          }
+          if (allPaths.length) await supabase.storage.from("receipts").remove(allPaths);
+        }
+      } catch (e) {
+        console.warn("storage cleanup skipped:", e);
+      }
+
+      toast.success("تم إعادة التعيين — حُذفت كل الإيصالات");
+      qc.invalidateQueries({ queryKey: ["print_receipts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats-v2"] });
+      qc.invalidateQueries({ queryKey: ["top-designers"] });
+      qc.invalidateQueries({ queryKey: ["recent-receipts"] });
+      setConfirmText("");
+    } catch (e: any) {
+      toast.error("فشل إعادة التعيين: " + (e?.message ?? "خطأ غير معروف"));
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-8">
