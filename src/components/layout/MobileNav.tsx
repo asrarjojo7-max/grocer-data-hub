@@ -24,9 +24,16 @@ export function MobileNav() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const visible = items.filter((i) => !i.admin || isAdmin);
-  // In RTL: rightItems render on the right side (start), leftItems on the left side (end)
-  const rightItems = visible.slice(0, 2); // الرئيسية + إيصالاتي → يمين
-  const leftItems = visible.slice(2, 4);  // التقارير + الإيصالات → يسار
+  // Cap visible items so the bar never feels crowded.
+  // When everything fits (≤3 items), hide the "More" button entirely.
+  // When it doesn't (4 items for admin), drop the last nav item and surface "More" instead.
+  const MAX_INLINE = 3;
+  const showMore = visible.length > MAX_INLINE;
+  const inline = showMore ? visible.slice(0, MAX_INLINE) : visible;
+  // RTL: first half renders on the right (start), rest on the left (end)
+  const splitAt = Math.ceil(inline.length / 2);
+  const rightItems = inline.slice(0, splitAt);
+  const leftItems = inline.slice(splitAt);
   const isNewActive = location.pathname === "/receipts/new";
 
   const NavItem = ({ item }: { item: (typeof items)[number] }) => {
@@ -106,21 +113,23 @@ export function MobileNav() {
               {leftItems.map((item) => (
                 <NavItem key={item.path} item={item} />
               ))}
-              <button
-                onClick={() => setMenuOpen(true)}
-                aria-label="المزيد"
-                className="flex flex-col items-center justify-center gap-1 flex-1 h-full press tap group"
-              >
-                <div className="flex items-center justify-center w-11 h-7 rounded-2xl transition-all duration-300">
-                  <MoreHorizontal
-                    className="w-[22px] h-[22px] text-muted-foreground group-hover:text-foreground transition-colors"
-                    strokeWidth={2}
-                  />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground leading-none">
-                  المزيد
-                </span>
-              </button>
+              {showMore && (
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="المزيد"
+                  className="flex flex-col items-center justify-center gap-1 flex-1 h-full press tap group"
+                >
+                  <div className="flex items-center justify-center w-11 h-7 rounded-2xl transition-all duration-300">
+                    <MoreHorizontal
+                      className="w-[22px] h-[22px] text-muted-foreground group-hover:text-foreground transition-colors"
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground leading-none">
+                    المزيد
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>
