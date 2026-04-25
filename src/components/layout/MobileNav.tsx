@@ -76,7 +76,7 @@ export function MobileNav() {
           <div className="absolute inset-0 bg-card/85 backdrop-blur-2xl border-t border-border/60 shadow-[0_-8px_32px_-8px_hsl(var(--foreground)/0.12)]" />
 
           <div className="relative flex items-center h-[68px] px-2">
-            {/* Right side items (RTL: appears on right) */}
+            {/* Right side items (RTL: appears on right - start) */}
             <div className="flex flex-1 items-center">
               {rightItems.map((item) => (
                 <NavItem key={item.path} item={item} />
@@ -101,7 +101,7 @@ export function MobileNav() {
               </Link>
             </div>
 
-            {/* Left side items */}
+            {/* Left side items (RTL: appears on left - end) */}
             <div className="flex flex-1 items-center">
               {leftItems.map((item) => (
                 <NavItem key={item.path} item={item} />
