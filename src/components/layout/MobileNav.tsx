@@ -113,21 +113,23 @@ export function MobileNav() {
               {leftItems.map((item) => (
                 <NavItem key={item.path} item={item} />
               ))}
-              <button
-                onClick={() => setMenuOpen(true)}
-                aria-label="المزيد"
-                className="flex flex-col items-center justify-center gap-1 flex-1 h-full press tap group"
-              >
-                <div className="flex items-center justify-center w-11 h-7 rounded-2xl transition-all duration-300">
-                  <MoreHorizontal
-                    className="w-[22px] h-[22px] text-muted-foreground group-hover:text-foreground transition-colors"
-                    strokeWidth={2}
-                  />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground leading-none">
-                  المزيد
-                </span>
-              </button>
+              {showMore && (
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="المزيد"
+                  className="flex flex-col items-center justify-center gap-1 flex-1 h-full press tap group"
+                >
+                  <div className="flex items-center justify-center w-11 h-7 rounded-2xl transition-all duration-300">
+                    <MoreHorizontal
+                      className="w-[22px] h-[22px] text-muted-foreground group-hover:text-foreground transition-colors"
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground leading-none">
+                    المزيد
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>
