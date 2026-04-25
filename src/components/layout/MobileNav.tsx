@@ -24,8 +24,9 @@ export function MobileNav() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const visible = items.filter((i) => !i.admin || isAdmin);
-  const leftItems = visible.slice(0, 2);
-  const rightItems = visible.slice(2, 4);
+  // In RTL: rightItems render on the right side (start), leftItems on the left side (end)
+  const rightItems = visible.slice(0, 2); // الرئيسية + إيصالاتي → يمين
+  const leftItems = visible.slice(2, 4);  // التقارير + الإيصالات → يسار
   const isNewActive = location.pathname === "/receipts/new";
 
   const NavItem = ({ item }: { item: (typeof items)[number] }) => {
