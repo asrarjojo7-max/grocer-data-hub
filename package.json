@@ -10,7 +10,9 @@
     "build:mobile": "vite build && npx cap sync android",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "install:safe": "npm install --legacy-peer-deps",
+    "ci:safe": "npm ci --legacy-peer-deps"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
