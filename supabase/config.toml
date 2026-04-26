@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.extract-print-receipt]
 verify_jwt = false
+
+[functions.finalize-whatsapp-groups]
+verify_jwt = false
