@@ -21,9 +21,11 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.sudatech.nesbaty",
   appName: "نسبتي",
-  webDir: ".output/public",
+  // Capacitor needs a static SPA build (NOT TanStack SSR worker output).
+  // We bundle the app to dist/spa via `npm run build:android`.
+  webDir: "dist/spa",
   bundledWebRuntime: false,
-  // ⚠️ للتطوير فقط — احذف/علّق هذا القسم قبل بناء APK للنشر:
+  // Live-reload for dev only — uncomment then run `npx cap sync android`.
   // server: {
   //   url: "https://id-preview--73b09833-bb90-4c31-815b-aa57457e1c13.lovable.app",
   //   cleartext: true,
