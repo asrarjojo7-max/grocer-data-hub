@@ -111,12 +111,31 @@ export default function Settings() {
   const handleReset = async () => {
     setResetting(true);
     try {
-      // Delete all receipts. RLS allows admins to delete any row via has_role.
-      const { error } = await (supabase as any)
+      // Count first so we can report exactly how many were removed.
+      const { count: beforeCount } = await (supabase as any)
         .from("print_receipts")
-        .delete()
+        .select("id", { count: "exact", head: true });
+
+      // Delete all receipts. RLS allows admins to delete any row via has_role.
+      const { error, count } = await (supabase as any)
+        .from("print_receipts")
+        .delete({ count: "exact" })
         .not("id", "is", null);
       if (error) throw error;
+
+      // Verify deletion actually happened (RLS may silently filter rows).
+      const { count: afterCount } = await (supabase as any)
+        .from("print_receipts")
+        .select("id", { count: "exact", head: true });
+
+      if ((afterCount ?? 0) > 0) {
+        throw new Error(
+          `تبقى ${afterCount} إيصال لم يُحذف — تأكد أن حسابك يملك صلاحية المدير`
+        );
+      }
+
+      const removed = count ?? beforeCount ?? 0;
+      console.log(`[reset] removed ${removed} receipts`);
 
       // Try to clear stored receipt images too (best-effort, non-blocking).
       try {
