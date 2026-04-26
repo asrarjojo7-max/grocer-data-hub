@@ -61,11 +61,15 @@ function invalidateReceiptQueries(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["recent-receipts"] });
 }
 
-export function useReceipts(onlyMine = false) {
+export function useReceipts(onlyMine = false, limit = 200) {
   return useQuery({
-    queryKey: ["print_receipts", onlyMine],
+    queryKey: ["print_receipts", onlyMine, limit],
     queryFn: async () => {
-      let query = supabase.from("print_receipts" as any).select("*").order("created_at", { ascending: false });
+      let query = supabase
+        .from("print_receipts" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
       if (onlyMine) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) query = query.eq("user_id", user.id);
@@ -74,6 +78,7 @@ export function useReceipts(onlyMine = false) {
       if (error) throw error;
       return (data || []) as unknown as PrintReceipt[];
     },
+    staleTime: 30_000,
   });
 }
 
