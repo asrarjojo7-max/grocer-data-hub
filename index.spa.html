@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+  SPA entry HTML used ONLY for the Capacitor / Android build.
+  The web preview/production uses TanStack Start SSR with src/routes/__root.tsx.
+  This file mounts a plain React Router SPA (src/main.spa.tsx) so the same code
+  runs offline inside an Android WebView.
+-->
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#E86A1F" />
+    <title>نسبتي</title>
+    <link rel="icon" type="image/png" href="/logo.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.spa.tsx"></script>
+  </body>
+</html>
