@@ -168,9 +168,6 @@ export default function Settings() {
       qc.invalidateQueries({ queryKey: ["receipts"] });
       qc.invalidateQueries({ queryKey: ["my-receipts"] });
       setConfirmText("");
-      qc.invalidateQueries({ queryKey: ["top-designers"] });
-      qc.invalidateQueries({ queryKey: ["recent-receipts"] });
-      setConfirmText("");
     } catch (e: any) {
       toast.error("فشل إعادة التعيين: " + (e?.message ?? "خطأ غير معروف"));
     } finally {
