@@ -23,6 +23,8 @@ export function useDashboardStats() {
       const today = new Date().toISOString().split("T")[0];
       const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
 
+      // Cap rows so a year-old database doesn't drag this query down.
+      // 5000 rows comfortably covers a busy month for a small print shop.
       const { data: branches, error: bErr } = await supabase
         .from("branches")
         .select("id, is_active");
@@ -31,7 +33,9 @@ export function useDashboardStats() {
       const { data: receipts, error: rErr } = await (supabase as any)
         .from("print_receipts")
         .select("total_meters, total_amount, commission_amount, net_amount, is_confirmed, receipt_date")
-        .gte("receipt_date", monthAgo);
+        .gte("receipt_date", monthAgo)
+        .order("receipt_date", { ascending: false })
+        .limit(5000);
       if (rErr) throw rErr;
 
       const todayRows = (receipts || []).filter((r: any) => r.receipt_date >= today);
@@ -55,6 +59,7 @@ export function useDashboardStats() {
         totalBranches: branches?.length || 0,
       };
     },
+    staleTime: 30_000,
   });
 }
 
@@ -76,7 +81,9 @@ export function useTopDesigners(limit = 5) {
         .from("print_receipts")
         .select("user_id, total_meters, commission_amount")
         .gte("receipt_date", monthAgo)
-        .not("user_id", "is", null);
+        .not("user_id", "is", null)
+        .order("receipt_date", { ascending: false })
+        .limit(5000);
       if (error) throw error;
 
       const map = new Map<string, { meters: number; commission: number; count: number }>();

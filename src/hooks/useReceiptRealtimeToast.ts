@@ -49,9 +49,10 @@ export function useReceiptRealtimeToast() {
             showNotification({ title, body, url: "/my-receipts", tag: r.id });
           }
 
+          // Only invalidate the lists that actually display the new row;
+          // skip top-designers (rarely visible, recomputed on visit anyway).
           qc.invalidateQueries({ queryKey: ["print_receipts"] });
           qc.invalidateQueries({ queryKey: ["dashboard-stats-v2"] });
-          qc.invalidateQueries({ queryKey: ["top-designers"] });
           qc.invalidateQueries({ queryKey: ["recent-receipts"] });
         }
       )

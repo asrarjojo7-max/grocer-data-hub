@@ -440,6 +440,60 @@ export type Database = {
           },
         ]
       }
+      whatsapp_pending_groups: {
+        Row: {
+          branch_id: string | null
+          chat_id: string | null
+          created_at: string
+          expires_at: string
+          from_number: string
+          id: string
+          image_data_urls: Json
+          image_hashes: Json
+          image_storage_urls: Json
+          instance_id: string
+          pages_count: number
+          sender_name: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          expires_at: string
+          from_number: string
+          id?: string
+          image_data_urls?: Json
+          image_hashes?: Json
+          image_storage_urls?: Json
+          instance_id: string
+          pages_count?: number
+          sender_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          expires_at?: string
+          from_number?: string
+          id?: string
+          image_data_urls?: Json
+          image_hashes?: Json
+          image_storage_urls?: Json
+          instance_id?: string
+          pages_count?: number
+          sender_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
