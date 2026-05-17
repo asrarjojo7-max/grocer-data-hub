@@ -32,6 +32,10 @@ const config: CapacitorConfig = {
   // },
   android: {
     allowMixedContent: true,
+    // Use https as the in-WebView scheme so App Links (https://nesbaty.lovable.app/*)
+    // can open the app directly without the "open with" chooser.
+    // Custom scheme `nesbaty://` still works through the intent-filter in
+    // AndroidManifest.xml (see android-deep-links.template.xml).
   },
   plugins: {
     SplashScreen: {
