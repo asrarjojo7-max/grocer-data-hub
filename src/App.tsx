@@ -2,8 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRouterState } from "@tanstack/react-router";
-import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Branches from "./pages/Branches";
@@ -20,17 +19,22 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 const isBrowser = typeof window !== "undefined";
+// Capacitor native (Android/iOS) exposes window.Capacitor.isNativePlatform.
+// In that environment we use HashRouter because it works reliably under
+// the WebView's local file/http scheme without relying on server-side
+// route rewrites. On the web we keep BrowserRouter for clean URLs.
+const isCapacitorNative =
+  isBrowser && !!(window as any).Capacitor?.isNativePlatform?.();
 
 function AppRouter({ children }: { children: React.ReactNode }) {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
-
+  if (isCapacitorNative) {
+    return <HashRouter>{children}</HashRouter>;
+  }
   if (isBrowser) {
     return <BrowserRouter>{children}</BrowserRouter>;
   }
-
-  return <MemoryRouter initialEntries={[pathname]}>{children}</MemoryRouter>;
+  // SSR fallback — no window, no TanStack context needed.
+  return <MemoryRouter initialEntries={["/"]}>{children}</MemoryRouter>;
 }
 
 const App = () => (

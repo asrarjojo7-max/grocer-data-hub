@@ -12,7 +12,7 @@
  *   # then: npx cap sync android
  *   # then: npx cap open android
  */
-import { build } from "vite";
+import { build, loadEnv } from "vite";
 import { existsSync, rmSync, mkdirSync, copyFileSync, writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "dist", "spa");
+
+// Merge process.env with values from .env / .env.local so the Capacitor
+// build can read Supabase keys without requiring shell exports.
+const fileEnv = loadEnv("production", root, "");
+const env = { ...fileEnv, ...process.env };
 
 console.log("[build-spa] cleaning dist/spa…");
 if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
@@ -39,9 +44,9 @@ await build({
     alias: { "@": path.join(root, "src") },
   },
   define: {
-    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(process.env.VITE_SUPABASE_URL ?? ""),
-    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? ""),
-    "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(process.env.VITE_SUPABASE_PROJECT_ID ?? ""),
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.VITE_SUPABASE_URL ?? ""),
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(env.VITE_SUPABASE_PUBLISHABLE_KEY ?? ""),
+    "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(env.VITE_SUPABASE_PROJECT_ID ?? ""),
   },
   build: {
     outDir,
