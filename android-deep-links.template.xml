@@ -1,0 +1,56 @@
+<!--
+  Deep-link intent filters for Android.
+
+  Capacitor's `android/` folder is generated locally by `npx cap add android`
+  and is NOT committed to this repo. After generating it (or after any
+  `npx cap sync android` that regenerates the manifest), open:
+
+      android/app/src/main/AndroidManifest.xml
+
+  Find the existing `<activity android:name=".MainActivity" ...>` block and
+  paste the TWO `<intent-filter>` blocks below INSIDE that activity, right
+  after the default LAUNCHER intent-filter that Capacitor already added.
+
+  Schemes registered:
+   1. Custom scheme   nesbaty://<anything>            (always opens the app)
+   2. Android App Link  https://nesbaty.lovable.app/* (verified — opens app
+      automatically once /.well-known/assetlinks.json is published, see
+      public/.well-known/assetlinks.json.template)
+
+  After editing the manifest run:
+      npx cap sync android
+      # then rebuild in Android Studio
+-->
+
+<!-- 1) Custom scheme: nesbaty://receipts/123 etc. -->
+<intent-filter android:autoVerify="false">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="nesbaty" />
+</intent-filter>
+
+<!-- 2) Android App Links: https://nesbaty.lovable.app/*
+     android:autoVerify="true" enables verified App Links so taps in
+     Chrome/Gmail/WhatsApp open the app directly (no chooser) once
+     assetlinks.json is live at:
+       https://nesbaty.lovable.app/.well-known/assetlinks.json
+-->
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="https" android:host="nesbaty.lovable.app" />
+    <!-- Optional: also accept the preview domain during testing -->
+    <data android:scheme="https" android:host="id-preview--73b09833-bb90-4c31-815b-aa57457e1c13.lovable.app" />
+</intent-filter>
+
+<!--
+  Also ensure these permissions exist near the top of AndroidManifest.xml
+  (Capacitor adds INTERNET by default; add the rest only if you use them):
+
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+-->
