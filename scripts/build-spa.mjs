@@ -12,7 +12,7 @@
  *   # then: npx cap sync android
  *   # then: npx cap open android
  */
-import { build } from "vite";
+import { build, loadEnv } from "vite";
 import { existsSync, rmSync, mkdirSync, copyFileSync, writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "dist", "spa");
+
+// Merge process.env with values from .env / .env.local so the Capacitor
+// build can read Supabase keys without requiring shell exports.
+const fileEnv = loadEnv("production", root, "");
+const env = { ...fileEnv, ...process.env };
 
 console.log("[build-spa] cleaning dist/spa…");
 if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
