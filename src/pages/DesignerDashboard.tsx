@@ -94,7 +94,10 @@ export function DesignerDashboard() {
               <div className="mt-4 pt-4 border-t border-primary-foreground/20 flex items-center justify-between">
                 <div className="text-xs opacity-80">سعر النسبة لكل متر</div>
                 <div className="text-base font-bold">
-                  {profile?.commission_per_meter || 0} ج.س
+                  {(stats.month.meters > 0
+                    ? Math.round((stats.month.commission / stats.month.meters) * 100) / 100
+                    : profile?.commission_per_meter || 0
+                  ).toLocaleString()} ج.س
                 </div>
               </div>
             </div>
