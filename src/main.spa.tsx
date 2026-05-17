@@ -7,6 +7,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles.css";
+import { normalizeInitialDeepLink, registerDeepLinkListener } from "./lib/deepLinks";
+
+// Cold-start deep link: rewrite `/receipts/123` → `/#/receipts/123` before
+// React mounts so HashRouter resolves the correct route.
+normalizeInitialDeepLink();
+
+// Warm-start deep links (notification taps while app is running).
+void registerDeepLinkListener();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
