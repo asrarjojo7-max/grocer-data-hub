@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useReceipts } from "@/hooks/useReceipts";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Loader2, Receipt } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
+import { TableSkeleton } from "@/components/skeletons";
 import { format } from "date-fns";
 
 export default function Receipts() {
@@ -26,7 +27,7 @@ export default function Receipts() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></div>
+            <TableSkeleton rows={6} cols={6} />
           ) : receipts.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
               <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />

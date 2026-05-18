@@ -155,7 +155,7 @@ export default function Reports() {
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">جاري التحميل…</div>
+            <ReceiptListSkeleton count={5} />
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-3">
