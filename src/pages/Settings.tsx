@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Save, Store, Users as UsersIcon, Lock, RotateCcw, AlertTriangle } from "lucide-react";
+import { TableSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranches } from "@/hooks/useBranches";
@@ -199,9 +200,7 @@ export default function Settings() {
               </CardHeader>
               <CardContent>
                 {branchesLoading ? (
-                  <div className="flex justify-center py-6">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
+                  <TableSkeleton rows={3} cols={3} />
                 ) : branches.length === 0 ? (
                   <p className="text-center text-muted-foreground py-6">لا توجد فروع</p>
                 ) : (
@@ -263,9 +262,7 @@ export default function Settings() {
               </CardHeader>
               <CardContent>
                 {designersLoading ? (
-                  <div className="flex justify-center py-6">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
+                  <TableSkeleton rows={3} cols={3} />
                 ) : designers.length === 0 ? (
                   <p className="text-center text-muted-foreground py-6">لا يوجد مصممون</p>
                 ) : (
