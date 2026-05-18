@@ -54,8 +54,12 @@ export default function Dashboard() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-6">
+          <StatGridSkeleton />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-6">
+            <StatGridSkeleton count={3} />
+          </div>
+          <ReceiptListSkeleton count={4} />
         </div>
       ) : (
         <>
