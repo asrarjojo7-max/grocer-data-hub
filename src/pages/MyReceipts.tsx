@@ -96,7 +96,7 @@ export default function MyReceipts() {
       </div>
 
       {isLoading ? (
-        <Card><CardContent className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></CardContent></Card>
+        <ReceiptListSkeleton count={6} />
       ) : receipts.length === 0 ? (
         <Card><CardContent className="p-12 text-center text-muted-foreground">
           <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />
