@@ -29,8 +29,9 @@ export default function Dashboard() {
   if (authLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <StatGridSkeleton />
         </div>
       </DashboardLayout>
     );
