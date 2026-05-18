@@ -20,6 +20,7 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TableSkeleton } from "@/components/skeletons";
 import { 
   useTransfers, 
   useConfirmTransfer, 
@@ -278,9 +279,7 @@ export default function Transfers() {
       {/* Transfers Table */}
       <div className="bg-card rounded-2xl shadow-soft border border-border/50 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <TableSkeleton rows={6} cols={6} />
         ) : filteredTransfers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <Image className="w-12 h-12 mb-4 opacity-50" />
