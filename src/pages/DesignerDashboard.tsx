@@ -3,6 +3,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { HeroCardSkeleton, ReceiptListSkeleton } from "@/components/skeletons";
 import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
@@ -21,7 +23,7 @@ import {
 
 export function DesignerDashboard() {
   const { data: profile } = useUserProfile();
-  const { data: receipts = [] } = useReceipts(true);
+  const { data: receipts = [], isLoading } = useReceipts(true);
   const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   const stats = useMemo(() => {
