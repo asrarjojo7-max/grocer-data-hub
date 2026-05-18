@@ -133,12 +133,25 @@
   }
   html {
     direction: rtl;
+    /* Auto-fit font scale across phone widths (320px → 480px maps 14px → 17px).
+       Keeps the UI from looking oversized on small phones or tiny on large ones. */
+    font-size: clamp(14px, 3.9vw, 16px);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  @media (min-width: 768px) {
+    html { font-size: 16px; }
   }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: "Tajawal", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* Respect notches and home indicator on phones */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
