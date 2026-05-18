@@ -14,15 +14,40 @@ import { Footer } from "@/components/layout/Footer";
 export default function Auth() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/");
+      if (session) {
+        navigate("/");
+      } else {
+        setCheckingSession(false);
+      }
     });
   }, [navigate]);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/40 to-background p-4" dir="rtl">
+        <Card className="w-full max-w-md shadow-elegant border-border/60">
+          <CardHeader className="text-center pb-4 space-y-3">
+            <Skeleton className="w-20 h-20 mx-auto rounded-2xl" />
+            <Skeleton className="h-6 w-24 mx-auto" />
+            <Skeleton className="h-4 w-56 mx-auto" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-12 w-full" /></div>
+            <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-12 w-full" /></div>
+            <Skeleton className="h-12 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
