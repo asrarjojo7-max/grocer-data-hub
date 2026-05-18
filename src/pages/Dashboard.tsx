@@ -4,12 +4,13 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TopDesignersChart } from "@/components/dashboard/TopDesignersChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatGridSkeleton, ReceiptListSkeleton } from "@/components/skeletons";
 import {
   Banknote,
   Store,
   Receipt,
   Calendar,
-  Loader2,
   Ruler,
   Wallet,
   TrendingUp,
