@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PageLoadingSkeleton } from "@/components/skeletons";
 import {
   MessageCircle,
   CheckCircle2,
@@ -50,13 +51,7 @@ export default function MyWhatsApp() {
   const [reconfigure, setReconfigure] = useState(false);
 
   if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   // ===== CONNECTED STATE =====
