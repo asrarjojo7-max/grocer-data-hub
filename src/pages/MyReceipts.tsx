@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
-import { Plus, Loader2, Ruler, Wallet, Receipt, MessageCircle, Upload, Eye } from "lucide-react";
+import { Plus, Ruler, Wallet, Receipt, MessageCircle, Upload, Eye } from "lucide-react";
+import { ReceiptListSkeleton } from "@/components/skeletons";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,7 +97,7 @@ export default function MyReceipts() {
       </div>
 
       {isLoading ? (
-        <Card><CardContent className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></CardContent></Card>
+        <ReceiptListSkeleton count={6} />
       ) : receipts.length === 0 ? (
         <Card><CardContent className="p-12 text-center text-muted-foreground">
           <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />

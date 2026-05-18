@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTopDesigners } from "@/hooks/useDashboardStats";
-import { Loader2, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 
 export function TopDesignersChart() {
@@ -19,8 +20,10 @@ export function TopDesignersChart() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <div className="flex items-end gap-2 h-[280px] py-2">
+            {[60, 80, 45, 90, 70, 55, 75].map((h, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
+            ))}
           </div>
         ) : !data || data.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">لا توجد بيانات بعد</p>

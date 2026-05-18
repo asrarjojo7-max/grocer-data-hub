@@ -3,6 +3,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { HeroCardSkeleton, ReceiptListSkeleton } from "@/components/skeletons";
 import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
@@ -21,7 +23,7 @@ import {
 
 export function DesignerDashboard() {
   const { data: profile } = useUserProfile();
-  const { data: receipts = [] } = useReceipts(true);
+  const { data: receipts = [], isLoading } = useReceipts(true);
   const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   const stats = useMemo(() => {
@@ -53,6 +55,33 @@ export function DesignerDashboard() {
     if (h < 18) return "مساء الخير";
     return "مساء النور";
   })();
+
+  if (isLoading && receipts.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-8 w-40" />
+        </div>
+        <div className="mb-4"><HeroCardSkeleton /></div>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className="border-0 shadow-soft"><CardContent className="p-3 space-y-2">
+              <Skeleton className="h-4 w-4 mx-auto rounded-full" />
+              <Skeleton className="h-5 w-12 mx-auto" />
+              <Skeleton className="h-2 w-16 mx-auto" />
+            </CardContent></Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          <Skeleton className="h-14 rounded-2xl" />
+          <Skeleton className="h-14 rounded-2xl" />
+        </div>
+        <Skeleton className="h-5 w-32 mb-3" />
+        <ReceiptListSkeleton count={4} />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
