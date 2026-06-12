@@ -97,34 +97,35 @@ export function DesignerDashboard() {
             <div className="relative">
               <div className="flex items-center gap-2 text-sm opacity-90 mb-1">
                 <Wallet className="w-4 h-4" />
-                <span>إجمالي عمولتي هذا الشهر</span>
+                <span>إجمالي عمولتي</span>
               </div>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-5xl font-extrabold tracking-tight tabular-nums">
-                  {stats.month.commission.toLocaleString()}
+                  {stats.all.commission.toLocaleString()}
                 </span>
                 <span className="text-xl font-semibold opacity-90">ج.س</span>
               </div>
               <div className="flex items-center gap-3 mt-4 text-sm opacity-90">
                 <div className="flex items-center gap-1.5">
                   <Receipt className="w-4 h-4" />
-                  <span>{stats.month.count} إيصال</span>
+                  <span>{stats.all.count} إيصال</span>
                 </div>
                 <span className="opacity-50">•</span>
                 <div className="flex items-center gap-1.5">
                   <Ruler className="w-4 h-4" />
-                  <span>{stats.month.meters.toLocaleString()} متر</span>
+                  <span>{stats.all.meters.toLocaleString()} متر</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-primary-foreground/20 flex items-center justify-between">
                 <div className="text-xs opacity-80">سعر النسبة لكل متر</div>
                 <div className="text-base font-bold">
-                  {(stats.month.meters > 0
-                    ? Math.round((stats.month.commission / stats.month.meters) * 100) / 100
+                  {(stats.all.meters > 0
+                    ? Math.round((stats.all.commission / stats.all.meters) * 100) / 100
                     : profile?.commission_per_meter || 0
                   ).toLocaleString()} ج.س
                 </div>
               </div>
+
             </div>
           </div>
         </CardContent>
