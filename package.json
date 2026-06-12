@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "build:mobile": "node scripts/build-spa.mjs && npx cap sync android",
     "build:mobile:ci": "npm run ci:safe && node scripts/build-spa.mjs && npx cap sync android",
+    "build:apk": "node scripts/build-apk.mjs",
+    "build:apk:debug": "node scripts/build-apk.mjs --debug",
     "build:spa": "node scripts/build-spa.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
