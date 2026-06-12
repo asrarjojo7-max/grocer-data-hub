@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { hashFile, hashFiles, fileToDataUrl } from "@/lib/imageHash";
 import { toast } from "sonner";
+
 
 export type PrintReceipt = {
   id: string;
@@ -83,7 +85,8 @@ export function useReceipts(onlyMine = false, limit = 200) {
 }
 
 export function useUserProfile() {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -92,8 +95,39 @@ export function useUserProfile() {
       if (error) throw error;
       return data as any;
     },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
+
+  // Realtime: refresh profile when admin updates commission_per_meter, etc.
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      channel = supabase
+        .channel(`profile-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+          () => {
+            qc.invalidateQueries({ queryKey: ["profile"] });
+            qc.invalidateQueries({ queryKey: ["print_receipts"] });
+          }
+        )
+        .subscribe();
+    })();
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  return query;
 }
+
+
 
 // Extract data from one or more receipt page images. The edge function accepts
 // `imagesBase64[]` so we can send a multi-page receipt as a single analysis call
