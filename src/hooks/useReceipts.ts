@@ -99,25 +99,34 @@ export function useUserProfile() {
     refetchOnWindowFocus: true,
   });
 
-  // Realtime: refresh profile when the admin updates commission_per_meter etc.
-  if (typeof window !== "undefined") {
-    // lazy init once per hook instance
-    (useUserProfile as any)._sub ??= (async () => {
+  // Realtime: refresh profile when admin updates commission_per_meter, etc.
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      return supabase
+      if (!user || cancelled) return;
+      channel = supabase
         .channel(`profile-${user.id}`)
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-          () => qc.invalidateQueries({ queryKey: ["profile"] })
+          () => {
+            qc.invalidateQueries({ queryKey: ["profile"] });
+            qc.invalidateQueries({ queryKey: ["print_receipts"] });
+          }
         )
         .subscribe();
     })();
-  }
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   return query;
 }
+
 
 
 // Extract data from one or more receipt page images. The edge function accepts
