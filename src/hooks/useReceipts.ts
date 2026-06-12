@@ -83,7 +83,8 @@ export function useReceipts(onlyMine = false, limit = 200) {
 }
 
 export function useUserProfile() {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -92,8 +93,30 @@ export function useUserProfile() {
       if (error) throw error;
       return data as any;
     },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
+
+  // Realtime: refresh profile when the admin updates commission_per_meter etc.
+  if (typeof window !== "undefined") {
+    // lazy init once per hook instance
+    (useUserProfile as any)._sub ??= (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      return supabase
+        .channel(`profile-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+          () => qc.invalidateQueries({ queryKey: ["profile"] })
+        )
+        .subscribe();
+    })();
+  }
+
+  return query;
 }
+
 
 // Extract data from one or more receipt page images. The edge function accepts
 // `imagesBase64[]` so we can send a multi-page receipt as a single analysis call
