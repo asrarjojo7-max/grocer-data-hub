@@ -67,7 +67,7 @@ export default function Settings() {
 
   useEffect(() => {
     const initial: Record<string, number> = {};
-    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_per_meter ?? 10)));
+    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_per_meter ?? 300)));
     setCommissions(initial);
   }, [designers]);
 
