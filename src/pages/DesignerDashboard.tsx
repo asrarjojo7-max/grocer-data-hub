@@ -36,13 +36,12 @@ export function DesignerDashboard() {
       rows.reduce(
         (a, r) => ({
           count: a.count + 1,
-          meters: a.meters + Number(r.total_meters),
-          commission: a.commission + Number(r.commission_amount),
+          meters: a.meters + Number(r.total_meters || 0),
+          commission: a.commission + Number(r.commission_amount || 0),
         }),
         { count: 0, meters: 0, commission: 0 }
       );
-    const dateOf = (r: PrintReceipt) =>
-      (r.created_at || r.receipt_date).slice(0, 10);
+    const dateOf = (r: PrintReceipt) => r.receipt_date.slice(0, 10);
     const todayRows = receipts.filter((r) => dateOf(r) >= today);
     const monthRows = receipts.filter((r) => dateOf(r) >= monthStart);
     return { today: reduce(todayRows), month: reduce(monthRows) };
@@ -50,6 +49,7 @@ export function DesignerDashboard() {
 
   const recent = receipts.slice(0, 5);
   const firstName = (profile?.full_name || "").split(" ")[0] || "بك";
+  const commissionPerMeter = Number(profile?.commission_per_meter || 0);
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return "صباح الخير";
@@ -126,7 +126,7 @@ export function DesignerDashboard() {
                 <div className="text-base font-bold">
                   {(stats.month.meters > 0
                     ? Math.round((stats.month.commission / stats.month.meters) * 100) / 100
-                    : profile?.commission_per_meter || 0
+                    : commissionPerMeter
                   ).toLocaleString()} ج.س
                 </div>
               </div>
