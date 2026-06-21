@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBranches } from "@/hooks/useBranches";
-import { useExtractReceipt, useCreateReceipt, findReceiptsByHashes } from "@/hooks/useReceipts";
+import { useExtractReceipt, useCreateReceipt, findReceiptsByHashes, useUserProfile } from "@/hooks/useReceipts";
 import { hashFiles, fileToDataUrl } from "@/lib/imageHash";
 import { Upload, Loader2, Sparkles, Info, X, Wallet, Plus, FileText, Camera, Images } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 export default function NewReceipt() {
   const navigate = useNavigate();
   const { branches = [] } = useBranches();
+  const { data: profile } = useUserProfile();
   const extract = useExtractReceipt();
   const create = useCreateReceipt();
 
@@ -37,11 +38,12 @@ export default function NewReceipt() {
 
   const totals = useMemo(() => {
     const meters = Number(totalMeters) || 0;
-    const rate = Number(pricePerMeter) || 0;
-    const total = meters * rate;
-    const commission = meters * rate;
-    return { total, commission, net: total - commission, rate };
-  }, [totalMeters, pricePerMeter]);
+    const meterPrice = Number(pricePerMeter) || 0;
+    const commissionRate = Number(profile?.commission_per_meter) || 0;
+    const total = meters * meterPrice;
+    const commission = meters * commissionRate;
+    return { total, commission, net: total - commission, commissionRate };
+  }, [totalMeters, pricePerMeter, profile?.commission_per_meter]);
 
   const handleFiles = async (newFiles: File[]) => {
     const valid = newFiles.filter((f) => f.type.startsWith("image/"));
@@ -97,7 +99,7 @@ export default function NewReceipt() {
       total_meters: Number(totalMeters),
       price_per_meter: Number(pricePerMeter),
       total_amount: totals.total,
-      commission_per_meter: totals.rate,
+      commission_per_meter: totals.commissionRate,
       commission_amount: totals.commission,
       net_amount: totals.net,
       ai_notes: aiNotes || null,
@@ -280,8 +282,8 @@ export default function NewReceipt() {
                     <Wallet className="w-6 h-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium opacity-90">ناتج الحساب لهذا الإيصال</div>
-                    <div className="text-xs opacity-75">{Number(totalMeters).toLocaleString()} م × {Number(pricePerMeter).toLocaleString()} ج.س/م</div>
+                    <div className="text-sm font-medium opacity-90">عمولتك لهذا الإيصال</div>
+                    <div className="text-xs opacity-75">{Number(totalMeters).toLocaleString()} م × {totals.commissionRate.toLocaleString()} ج.س/م</div>
                   </div>
                 </div>
                 <div className="text-right">

@@ -38,7 +38,7 @@ async function matchDesignerByPhone(supabase: any, fromNumber: string) {
     const pd = (p.phone || "").replace(/\D/g, "");
     return pd.length >= 9 && pd.slice(-9) === suffix;
   });
-  return m ? { id: m.id, commission_per_meter: Number(m.commission_per_meter ?? 10) } : null;
+  return m ? { id: m.id, commission_per_meter: Number(m.commission_per_meter ?? 300) } : null;
 }
 
 async function finalize(supabase: any, g: any) {

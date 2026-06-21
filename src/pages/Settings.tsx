@@ -67,7 +67,7 @@ export default function Settings() {
 
   useEffect(() => {
     const initial: Record<string, number> = {};
-    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_per_meter ?? 10)));
+    designers.forEach((d: any) => (initial[d.id] = Number(d.commission_per_meter ?? 300)));
     setCommissions(initial);
   }, [designers]);
 
@@ -93,6 +93,10 @@ export default function Settings() {
     if (error) return toast.error("فشل التحديث: " + error.message);
     toast.success("تم تحديث سعر النسبة لكل متر");
     qc.invalidateQueries({ queryKey: ["all-profiles"] });
+    qc.invalidateQueries({ queryKey: ["profile"] });
+    qc.invalidateQueries({ queryKey: ["print_receipts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-stats-v3-current-month"] });
+    qc.invalidateQueries({ queryKey: ["top-designers-current-month"] });
   };
 
   const changePassword = async () => {
