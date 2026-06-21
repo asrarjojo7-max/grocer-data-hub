@@ -148,7 +148,7 @@ export type Database = {
           total_amount: number
           total_meters: number
           updated_at: string
-          user_id: string | null
+          user_id: string
           whatsapp_from_number: string | null
         }
         Insert: {
@@ -176,7 +176,7 @@ export type Database = {
           total_amount?: number
           total_meters?: number
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           whatsapp_from_number?: string | null
         }
         Update: {
@@ -204,7 +204,7 @@ export type Database = {
           total_amount?: number
           total_meters?: number
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           whatsapp_from_number?: string | null
         }
         Relationships: [
