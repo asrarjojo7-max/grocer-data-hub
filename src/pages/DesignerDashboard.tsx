@@ -27,7 +27,11 @@ export function DesignerDashboard() {
   const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   const stats = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
     const reduce = (rows: typeof receipts) =>
       rows.reduce(
         (a, r) => ({
@@ -37,10 +41,11 @@ export function DesignerDashboard() {
         }),
         { count: 0, meters: 0, commission: 0 }
       );
-    const todayRows = receipts.filter(
-      (r) => (r.created_at || r.receipt_date).slice(0, 10) >= today
-    );
-    return { today: reduce(todayRows), all: reduce(receipts) };
+    const dateOf = (r: PrintReceipt) =>
+      (r.created_at || r.receipt_date).slice(0, 10);
+    const todayRows = receipts.filter((r) => dateOf(r) >= today);
+    const monthRows = receipts.filter((r) => dateOf(r) >= monthStart);
+    return { today: reduce(todayRows), month: reduce(monthRows) };
   }, [receipts]);
 
   const recent = receipts.slice(0, 5);
@@ -97,30 +102,30 @@ export function DesignerDashboard() {
             <div className="relative">
               <div className="flex items-center gap-2 text-sm opacity-90 mb-1">
                 <Wallet className="w-4 h-4" />
-                <span>إجمالي عمولتي</span>
+                <span>عمولة هذا الشهر</span>
               </div>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-5xl font-extrabold tracking-tight tabular-nums">
-                  {stats.all.commission.toLocaleString()}
+                  {stats.month.commission.toLocaleString()}
                 </span>
                 <span className="text-xl font-semibold opacity-90">ج.س</span>
               </div>
               <div className="flex items-center gap-3 mt-4 text-sm opacity-90">
                 <div className="flex items-center gap-1.5">
                   <Receipt className="w-4 h-4" />
-                  <span>{stats.all.count} إيصال</span>
+                  <span>{stats.month.count} إيصال</span>
                 </div>
                 <span className="opacity-50">•</span>
                 <div className="flex items-center gap-1.5">
                   <Ruler className="w-4 h-4" />
-                  <span>{stats.all.meters.toLocaleString()} متر</span>
+                  <span>{stats.month.meters.toLocaleString()} متر</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-primary-foreground/20 flex items-center justify-between">
                 <div className="text-xs opacity-80">سعر النسبة لكل متر</div>
                 <div className="text-base font-bold">
-                  {(stats.all.meters > 0
-                    ? Math.round((stats.all.commission / stats.all.meters) * 100) / 100
+                  {(stats.month.meters > 0
+                    ? Math.round((stats.month.commission / stats.month.meters) * 100) / 100
                     : profile?.commission_per_meter || 0
                   ).toLocaleString()} ج.س
                 </div>
