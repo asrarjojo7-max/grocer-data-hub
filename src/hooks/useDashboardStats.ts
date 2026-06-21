@@ -18,13 +18,15 @@ export interface DashboardStats {
 
 export function useDashboardStats() {
   return useQuery({
-    queryKey: ["dashboard-stats-v2"],
+    queryKey: ["dashboard-stats-v3-current-month"],
     queryFn: async (): Promise<DashboardStats> => {
-      const today = new Date().toISOString().split("T")[0];
-      const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+      const now = new Date();
+      const today = now.toISOString().split("T")[0];
+      // Start of current calendar month (homepage shows current month only)
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
 
-      // Cap rows so a year-old database doesn't drag this query down.
-      // 5000 rows comfortably covers a busy month for a small print shop.
       const { data: branches, error: bErr } = await supabase
         .from("branches")
         .select("id, is_active");
@@ -33,7 +35,7 @@ export function useDashboardStats() {
       const { data: receipts, error: rErr } = await (supabase as any)
         .from("print_receipts")
         .select("total_meters, total_amount, commission_amount, net_amount, is_confirmed, receipt_date")
-        .gte("receipt_date", monthAgo)
+        .gte("receipt_date", monthStart)
         .order("receipt_date", { ascending: false })
         .limit(5000);
       if (rErr) throw rErr;
@@ -73,14 +75,17 @@ export interface TopDesigner {
 
 export function useTopDesigners(limit = 5) {
   return useQuery({
-    queryKey: ["top-designers", limit],
+    queryKey: ["top-designers-current-month", limit],
     queryFn: async (): Promise<TopDesigner[]> => {
-      const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
 
       const { data: receipts, error } = await (supabase as any)
         .from("print_receipts")
         .select("user_id, total_meters, commission_amount")
-        .gte("receipt_date", monthAgo)
+        .gte("receipt_date", monthStart)
         .not("user_id", "is", null)
         .order("receipt_date", { ascending: false })
         .limit(5000);
