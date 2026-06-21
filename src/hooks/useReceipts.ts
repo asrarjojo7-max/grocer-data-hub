@@ -58,13 +58,17 @@ export async function findReceiptsByHashes(hashes: string[]): Promise<PrintRecei
 // recent list, top designers and reports all refresh after a mutation.
 function invalidateReceiptQueries(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["print_receipts"] });
+  qc.invalidateQueries({ queryKey: ["profile"] });
   qc.invalidateQueries({ queryKey: ["dashboard-stats-v2"] });
+  qc.invalidateQueries({ queryKey: ["dashboard-stats-v3-current-month"] });
   qc.invalidateQueries({ queryKey: ["top-designers"] });
+  qc.invalidateQueries({ queryKey: ["top-designers-current-month"] });
   qc.invalidateQueries({ queryKey: ["recent-receipts"] });
 }
 
 export function useReceipts(onlyMine = false, limit = 200) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["print_receipts", onlyMine, limit],
     queryFn: async () => {
       let query = supabase
@@ -80,8 +84,41 @@ export function useReceipts(onlyMine = false, limit = 200) {
       if (error) throw error;
       return (data || []) as unknown as PrintReceipt[];
     },
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (onlyMine && !user) return;
+
+      channel = supabase
+        .channel(`print-receipts-${onlyMine ? user!.id : "all"}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "print_receipts",
+            ...(onlyMine ? { filter: `user_id=eq.${user!.id}` } : {}),
+          },
+          () => invalidateReceiptQueries(qc)
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [onlyMine, qc]);
+
+  return query;
 }
 
 export function useUserProfile() {
