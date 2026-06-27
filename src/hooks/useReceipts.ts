@@ -64,6 +64,34 @@ function invalidateReceiptQueries(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["top-designers"] });
   qc.invalidateQueries({ queryKey: ["top-designers-current-month"] });
   qc.invalidateQueries({ queryKey: ["recent-receipts"] });
+  qc.invalidateQueries({ queryKey: ["designer-month-stats"] });
+  qc.invalidateQueries({ queryKey: ["dashboard-month-stats"] });
+}
+
+// Fast, server-aggregated monthly stats for the current designer.
+// Uses an RPC so the client never downloads thousands of receipt rows.
+export function useDesignerMonthStats() {
+  return useQuery({
+    queryKey: ["designer-month-stats"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data, error } = await (supabase as any).rpc("get_designer_month_stats", {
+        p_user_id: user.id,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        metersMonth: Number(row?.meters_month || 0),
+        commissionMonth: Number(row?.commission_month || 0),
+        countMonth: Number(row?.count_month || 0),
+        metersToday: Number(row?.meters_today || 0),
+        commissionToday: Number(row?.commission_today || 0),
+        countToday: Number(row?.count_today || 0),
+      };
+    },
+    staleTime: 30_000,
+  });
 }
 
 export function useReceipts(onlyMine = false, limit = 200) {
