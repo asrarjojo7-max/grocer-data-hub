@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HeroCardSkeleton, ReceiptListSkeleton } from "@/components/skeletons";
-import { useReceipts, useUserProfile, type PrintReceipt } from "@/hooks/useReceipts";
+import { useReceipts, useUserProfile, useDesignerMonthStats, type PrintReceipt } from "@/hooks/useReceipts";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { ReceiptDetailDialog } from "@/components/receipts/ReceiptDetailDialog";
