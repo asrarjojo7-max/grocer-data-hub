@@ -24,9 +24,24 @@ import {
 export function DesignerDashboard() {
   const { data: profile } = useUserProfile();
   const { data: receipts = [], isLoading } = useReceipts(true);
+  const { data: monthStats } = useDesignerMonthStats();
   const [selected, setSelected] = useState<PrintReceipt | null>(null);
 
   const stats = useMemo(() => {
+    if (monthStats) {
+      return {
+        today: {
+          count: monthStats.countToday,
+          meters: monthStats.metersToday,
+          commission: monthStats.commissionToday,
+        },
+        month: {
+          count: monthStats.countMonth,
+          meters: monthStats.metersMonth,
+          commission: monthStats.commissionMonth,
+        },
+      };
+    }
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -45,7 +60,7 @@ export function DesignerDashboard() {
     const todayRows = receipts.filter((r) => dateOf(r) >= today);
     const monthRows = receipts.filter((r) => dateOf(r) >= monthStart);
     return { today: reduce(todayRows), month: reduce(monthRows) };
-  }, [receipts]);
+  }, [receipts, monthStats]);
 
   const recent = receipts.slice(0, 5);
   const firstName = (profile?.full_name || "").split(" ")[0] || "بك";
