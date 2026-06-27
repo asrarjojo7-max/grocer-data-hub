@@ -499,6 +499,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_dashboard_month_stats: {
+        Args: never
+        Returns: {
+          amount_month: number
+          amount_today: number
+          commission_month: number
+          commission_today: number
+          count_month: number
+          count_today: number
+          meters_month: number
+          meters_today: number
+          net_month: number
+          net_today: number
+          pending_count: number
+        }[]
+      }
+      get_designer_month_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          commission_month: number
+          commission_today: number
+          count_month: number
+          count_today: number
+          meters_month: number
+          meters_today: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
